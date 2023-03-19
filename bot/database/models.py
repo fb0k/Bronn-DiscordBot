@@ -113,7 +113,7 @@ class Guild(Model):
     # Core Components Of The Model
     discord_id = fields.BigIntField(pk=True)
     language = fields.TextField(default="en")
-    prefix = fields.TextField(default="-")
+    prefix = fields.TextField(default=".")
     timezone = fields.TextField(default="UTC")
     automod = fields.BooleanField(default=False)
     automod_log = fields.BigIntField(default=0)

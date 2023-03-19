@@ -12,7 +12,7 @@ will default to the values passed to the `default` kwarg.
 import os
 from enum import Enum
 from typing import Optional
-from typing import Any
+from typing import Any, Final
 import database
 from pydantic import BaseModel, BaseSettings, root_validator
 
@@ -21,9 +21,13 @@ from pydantic import BaseModel, BaseSettings, root_validator
 
 class EnvConfig(BaseSettings):
     class Config:
-        env_file = ".env", ".env.server",
-        env_file_encoding = 'utf-8'
-        env_nested_delimiter = '__'
+        env_file = (
+            ".env",
+            ".env.server",
+        )
+        env_file_encoding = "utf-8"
+        env_nested_delimiter = "__"
+
 
 # For setting debug or logs when starting program
 
@@ -48,11 +52,16 @@ class _Bot(EnvConfig):
 
     name = "B0F"
     discord_id = "bot_id"
-    prefix = "!"
+    prefix = "."
     sentry_dsn = "https://5a6c0fa78ab745b6b6166ff6ec413e22@o4504850831114240.ingest.sentry.io/4504850837536768"
     token = "bot_token"
-    trace_loggers = "*"
-    owners_ids = ["my_id", ]
+    trace_loggersr = "*"
+    owners_ids = [
+        "my_id",
+    ]
+    support_server_id = 893622012717719634
+    terms_of_service = ""
+    privacy_policy = ""
 
 
 Bot = _Bot()
@@ -90,8 +99,8 @@ Database = _Database()
 TORTOISE_CONFIG: dict[str, Any] = {
     "connections": {"default": "db_url2"},
     "apps": {
-        f'{Bot.name}': {
-            "models": [f'{Database.model_path}', "aerich.models"],
+        f"{Bot.name}": {
+            "models": [f"{Database.model_path}", "aerich.models"],
             "default_connection": "default",
         }
     },
@@ -100,7 +109,7 @@ TORTOISE_CONFIG: dict[str, Any] = {
 }
 
 
-class _Channels(EnvConfig):
+class _B0FChannels(EnvConfig):
     # Channels ID's, 'channels_name = newid' to override
     # Channels.name, to get a specific ID
 
@@ -121,7 +130,7 @@ class _Channels(EnvConfig):
 
 
 # Object of _Channels, to receive attrs (Channels.name...)
-Channels = _Channels()
+Channels = _B0FChannels()
 
 
 class _Roles(EnvConfig):
@@ -173,7 +182,6 @@ class _Guild(EnvConfig):
     moderation_categories = [
         Categories.moderators,
         Categories.modmail,
-
     ]
     moderation_channels = [Channels.admins, Channels.admin_spam, Channels.mods]
     modlog_blacklist = [
@@ -184,10 +192,8 @@ class _Guild(EnvConfig):
         Channels.filter_log,
         Channels.automodlog,
         Channels.serverlog,
-
     ]
-    moderation_roles = [Roles.admins, Roles.mod_team,
-                        Roles.moderators, Roles.owners]
+    moderation_roles = [Roles.admins, Roles.mod_team, Roles.moderators, Roles.owners]
     staff_roles = [Roles.admins, Roles.helpers, Roles.mod_team, Roles.owners]
 
 
@@ -233,16 +239,19 @@ class _Colours(EnvConfig):
 
     EnvConfig.Config.env_prefix = "colours_"
 
-    blue = 0x3775a8
-    bright_green = 0x01d277
-    orange = 0xe67e22
-    pink = 0xcf84e0
-    purple = 0xb734eb
-    soft_green = 0x68c290
-    soft_orange = 0xf9cb54
-    soft_red = 0xcd6d6d
-    white = 0xfffffe
-    yellow = 0xffd241
+    blue = 0x3775A8
+    bright_green = 0x01D277
+    orange = 0xE67E22
+    pink = 0xCF84E0
+    purple = 0xB734EB
+    soft_green = 0x68C290
+    soft_orange = 0xF9CB54
+    soft_red = 0xCD6D6D
+    white = 0xFFFFFE
+    yellow = 0xFFD241
+    default = 0x4620F1
+    success = 0x31D85B
+    error = 0xFF0000
 
     @root_validator(pre=True)
     def parse_hex_values(cls, values):
@@ -384,6 +393,14 @@ class _URLs(_BaseURLs):
 URLs = _URLs()
 
 
+class _Char(EnvConfig):
+    arrow: Final[str] = "▸"
+    star: Final[str] = "★"
+
+
+Char = _Char()
+
+
 class _Emojis(EnvConfig):
     # Emojis abbreviations
 
@@ -407,15 +424,19 @@ class _Icons(EnvConfig):
     crown_green = "https://cdn.discordapp.com/emojis/469964154719961088.png"
     crown_red = "https://cdn.discordapp.com/emojis/469964154879344640.png"
 
-    defcon_denied = "https://cdn.discordapp.com/emojis/472475292078964738.png"    # noqa: E704
+    defcon_denied = "https://cdn.discordapp.com/emojis/472475292078964738.png"  # noqa: E704
     defcon_shutdown = "https://cdn.discordapp.com/emojis/470326273952972810.png"  # noqa: E704
-    defcon_unshutdown = "https://cdn.discordapp.com/emojis/470326274213150730.png"   # noqa: E704
-    defcon_update = "https://cdn.discordapp.com/emojis/472472638342561793.png"   # noqa: E704
+    defcon_unshutdown = "https://cdn.discordapp.com/emojis/470326274213150730.png"  # noqa: E704
+    defcon_update = "https://cdn.discordapp.com/emojis/472472638342561793.png"  # noqa: E704
 
     filtering = "https://cdn.discordapp.com/emojis/472472638594482195.png"
 
-    green_checkmark = "https://raw.githubusercontent.com/python-discord/branding/main/icons/checkmark/green-checkmark-dist.png"
-    green_questionmark = "https://raw.githubusercontent.com/python-discord/branding/main/icons/checkmark/green-question-mark-dist.png"
+    green_checkmark = (
+        "https://raw.githubusercontent.com/python-discord/branding/main/icons/checkmark/green-checkmark-dist.png"
+    )
+    green_questionmark = (
+        "https://raw.githubusercontent.com/python-discord/branding/main/icons/checkmark/green-question-mark-dist.png"
+    )
     guild_update = "https://cdn.discordapp.com/emojis/469954765141442561.png"
 
     hash_blurple = "https://cdn.discordapp.com/emojis/469950142942806017.png"
