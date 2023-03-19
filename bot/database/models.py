@@ -1,15 +1,9 @@
-import asyncio
-
 # import aioredis
 from discord import Guild as GuildModel
 from discord.ext.commands import Context
 from tortoise import fields
 from tortoise.expressions import F
 from tortoise.models import Model
-from typing import Any, Optional, TYPE_CHECKING
-if TYPE_CHECKING:
-    from bot import constants
-
 
 
 # aioredis.util._converters[bool] = lambda x: b"1" if x else b"0"
@@ -135,8 +129,7 @@ class Guild(Model):
     # Some Checks (soon™)
     is_bot_blacklisted = fields.BooleanField(default=False)
     is_nsfw_disabled = fields.BooleanField(default=True)
-    blacklisted_reason = fields.TextField(
-        default="Violating TOS", unique=False)
+    blacklisted_reason = fields.TextField(default="Violating TOS", unique=False)
 
     # Premium
     is_premium = fields.BooleanField(default=False)
@@ -226,8 +219,7 @@ class Users(Model):
     user_id = fields.BigIntField(pk=True)
     commands_run = fields.BigIntField(default=0, null=True)
     tracking_enabled = fields.BooleanField(default=True)
-    api_key = fields.ForeignKeyField(
-        "B0F.Keys", related_name="Users", null=True)
+    api_key = fields.ForeignKeyField("B0F.Keys", related_name="Users", null=True)
 
     async def increment(self, increase_no: int = 1):
         self.commands_run = F("commands_run") + increase_no
