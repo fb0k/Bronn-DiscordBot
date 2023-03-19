@@ -1,0 +1,23 @@
+aiohttp
+aerich
+aioredis
+asyncpg
+beautifulsoup4
+jishaku @ git+https://github.com/Gorialis/jishaku@master
+numpy
+pre-commit
+py-cord @ git+https://github.com/Pycord-Development/pycord.git@master
+pydantic
+pytz
+pyyaml
+tortoise-orm @ git+https://github.com/tortoise/tortoise-orm/@develop
+lxml
+colorama
+regex
+python-dotenv
+requests-cache
+pandas
+pypresence @ git+https://github.com/qwertyquerty/pypresence@master
+sentry-sdk
+black
+coloredlogs

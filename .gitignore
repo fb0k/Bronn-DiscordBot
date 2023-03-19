@@ -1,0 +1,43 @@
+# Cache
+__pycache__
+.cache
+data/**
+
+# Database
+migrations/
+pyproject.toml
+
+# Config
+config/config.yaml
+.markdownlint.json
+*config.yml
+
+# VS Code
+.vscode/
+
+# Documentation
+docs/site
+docs_build
+site
+
+# dotenv
+.env
+
+# virtualenv
+.venv
+venv/
+ENV/
+
+# Logfiles
+log.*
+*.log.*
+!log.py
+
+# Custom user configuration
+*config.yml
+*config.yaml
+docker-compose.override.yml
+metricity-config.toml
+
+# Notes
+TODO.txt
