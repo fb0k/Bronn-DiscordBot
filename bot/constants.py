@@ -11,8 +11,7 @@ will default to the values passed to the `default` kwarg.
 """
 import os
 from enum import Enum
-from typing import Optional
-from typing import Any, Final
+from typing import Any, Final, Optional
 import database
 from pydantic import BaseModel, BaseSettings, root_validator
 
@@ -394,8 +393,8 @@ URLs = _URLs()
 
 
 class _Char(EnvConfig):
-    arrow: Final[str] = "▸"
-    star: Final[str] = "★"
+    arrow = "▸"
+    star = "★"
 
 
 Char = _Char()
@@ -406,10 +405,88 @@ class _Emojis(EnvConfig):
 
     EnvConfig.Config.env_prefix = "emojis_"
 
-    badge_bug_hunter = "<:bug_hunter_lvl1:743882896372269137>"
-    error = ":x:"
-    sucess = ":white_check_mark:"
-    information = ":speech_balloon:"
+    channel = "<:channel:897868496443158639>"
+    developer = "<:developer:897867252957839401>"
+    pycord = "<:pycord:898237436499484792>"
+    information = "<:information:897868584028635146>"
+    mention = "<:mention:897868536926588939>"
+    discord_official_moderator = "<:moderator:897868949151162368>"
+    owner = "<:crown:898233157671850085>"
+    python = "<:python:897868997943500820>"
+    slash_command = "<:slash_command:897868773468569681>"
+    stage_channel = "<:stage:897868727746449538>"
+    stats = "<:stats:897867757209661471>"
+    voice_channel = "<:voice_channel:897868449261432892>"
+    windows_10 = "<:windows10:898231148029837314>"
+    cpu = "<:cpu:898231378125156383>"
+    pc = "<:pc:898231801301049394>"
+    ram = "<:ram:898233910293581845>"
+    mai = "<:mai:898238143004835900>"
+    link = "<:link:898239182177194024>"
+    members = "<:members:901917213877997619>"
+    messages = "<:messages:901917529268682752>"
+    discord_employee = "<:employee:901918060909326376>"
+    brain = "<:bigbraintime:914164430172983397>"
+    redis = "<:redis:919271191569637426>"
+    discord = "<:discord:919271214097235978>"
+    postgresql = "<:postgresql:919271276265226290>"
+    youtube = "<:youtube:938807020059000842>"
+    spotify = "<:spotify:938804909913018438>"
+    soundcloud = "<:soundcloud:938804829659222036>"
+    twitter = "<:twitter:945720710783971338>"
+    instagram = "<:instagram:945720858268291182>"
+    twitch = "<:twitch:945721231603281970>"
+    tiktok = "<:tiktok:945721504597934080>"
+    genshin_impact = "<:genshinimpact:945747628891725834>"
+    anilist = "<:anilist:945747535807529021>"
+    my_anime_list = "<:myanimelist:945747485291319397>"
+    economy = "<:economy:945747383092912188>"
+    afk = "<:afk:945747339212128287>"
+    sniper = "<:sniper:945728578677506128>"
+    tag = "<:tag:945728326000066600>"
+    polls = "<:polls:945729635105251388>"
+    roblox = "<:roblox:945729388333383690>"
+    osu = "<:osu:945730029827031102>"
+    minecraft = "<:minecraft:945731420880535652>"
+    music = "<:music:945730564978245682>"
+    nsfw = "<:nsfwchannel:945730258332680223>"
+    leveling = "<:leveling:945750872992923738>"
+    image = "<:image:945751323272437800>"
+    counting = "<:counting:945752433005588552>"
+    captcha = "<:captcha:945752861290139759>"
+    cod = "<:cod:945752936888287253>"
+    topgg = "<:topgg:945754227102351400>"
+    statcord = "<:statcord:945754289521963079>"
+    changelogs = "<:changelogs:945754392190132245>"
+    report = "<:ch_badgebughunter:795849415993720832>"
+    valorant = "<:valorant:957331465174147112>"
+    badge_verified_bot_developer = "<:verified_bot_dev:743882897299210310>"
+    verified_bot = "<:verified_bot:811645219220750347>"
+    bot = "<:bot:812712599464443914>"
+    defcon_shutdown = "<:defcondisabled:470326273952972810>"  # noqa: E704
+    defcon_unshutdown = "<:defconenabled:470326274213150730>"  # noqa: E704
+    defcon_update = "<:defconsettingsupdated:470326274082996224>"  # noqa: E704
+
+    failmail = "<:failmail:633660039931887616>"
+    failed_file = "<:failed_file:1073298441968562226>"
+
+    incident_actioned = "<:incident_actioned:714221559279255583>"
+    incident_investigating = "<:incident_investigating:714224190928191551>"
+    incident_unactioned = "<:incident_unactioned:714223099645526026>"
+
+    status_dnd = "<:status_dnd:470326272082313216>"
+    status_idle = "<:status_idle:470326266625785866>"
+    status_offline = "<:status_offline:470326266537705472>"
+    status_online = "<:status_online:470326272351010816>"
+    trashcan = "<:trashcan:637136429717389331>"
+
+    bullet = "\u2022"
+    check_mark = "\u2705"
+    cross_mark = "\u274C"
+    new = "\U0001F195"
+    pencil = "\u270F"
+
+    ok_hand = ":ok_hand:"
 
 
 Emojis = _Emojis()
