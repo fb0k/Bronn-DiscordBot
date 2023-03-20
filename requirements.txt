@@ -21,3 +21,4 @@ pypresence @ git+https://github.com/qwertyquerty/pypresence@master
 sentry-sdk
 black
 coloredlogs
+humanize
