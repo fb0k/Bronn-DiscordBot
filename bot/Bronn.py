@@ -23,10 +23,9 @@ from tortoise.exceptions import IntegrityError
 from database.models import Guild
 from collections import defaultdict
 import constants
-from log import get_logger, return_error, setup
+from log import get_logger, return_error
 from database import tortoise_config
 import __init__
-
 
 
 os.system("cls" if sys.platform == "win32" else "clear")
@@ -36,7 +35,7 @@ log = get_logger("bot")
 class Bot(commands.Bot):
     on_ready_fired: bool = False
     cache: Dict[str, Dict] = {"afk": {}, "example_list": {}}
-    # setup()
+
     def __init__(
         self,
         development_mode: str = True,
@@ -82,7 +81,7 @@ class Bot(commands.Bot):
         chunk_guilds_at_startup: Literal[False] = False
         allowed_mentions: AllowedMentions = discord.mentions.AllowedMentions(everyone=False, roles=allowed_roles)
         stuff_to_cache: MemberCacheFlags = MemberCacheFlags.from_intents(intents)
-        
+
         super().__init__(
             # setup(),
             intents=intents,
@@ -102,7 +101,7 @@ class Bot(commands.Bot):
         self.load_extensions()
 
     def load_extensions(self, reraise_exceptions: bool = False) -> Tuple[Tuple[str], Tuple[str]]:
-        
+
         bot_dir = os.path.dirname(__file__)
         loaded_extensions = set()
         failed_extensions = set()

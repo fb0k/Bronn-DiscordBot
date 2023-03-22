@@ -1,6 +1,6 @@
 from Bronn import Bot
 import sys
-from log import get_logger, setup_sentry, setup
+from log import get_logger, setup_sentry
 # import __init__
 
 
