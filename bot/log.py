@@ -55,7 +55,7 @@ def setup() -> None:
         log_file.parent.mkdir(exist_ok=True)
         file_handler = handlers.RotatingFileHandler(log_file, maxBytes=5242880, backupCount=7, encoding="utf8")
         file_handler.setFormatter(log_format)
-        file_handler.setLevel(logging.WARNING)
+        # file_handler.setLevel(logging.WARNING)
         root_log.addHandler(file_handler)
 
     if "COLOREDLOGS_LEVEL_STYLES" not in os.environ:
@@ -63,7 +63,7 @@ def setup() -> None:
             **coloredlogs.DEFAULT_LEVEL_STYLES,
             "trace": {"color": 246},
             "critical": {"background": "red"},
-            "debug": coloredlogs.DEFAULT_LEVEL_STYLES["info"],
+            "debug": {},
             "info": coloredlogs.DEFAULT_LEVEL_STYLES["spam"],
         }
 
