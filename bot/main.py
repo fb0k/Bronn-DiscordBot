@@ -1,8 +1,9 @@
+from Bronn import Bot
 import sys
-from bot import Bot
-from log import get_logger, setup_sentry
+from log import get_logger, setup_sentry, setup
 
 
+setup()
 setup_sentry()
 bot: Bot = Bot(development_mode="development")
 

@@ -1,0 +1,10 @@
+2023-03-21 20:41:14,828 | bot | INFO | [EXTENSION] - exts.fun LOADED
+2023-03-21 20:41:14,829 | bot | INFO | [EXTENSION] - exts.info.help LOADED
+2023-03-21 20:41:14,830 | bot | INFO | [EXTENSION] - exts.info.subscribe LOADED
+2023-03-21 20:41:17,684 | tortoise | DEBUG | Tortoise-ORM startup
+    connections: {'default': 'asyncpg://postgres:fabi***@localhost:5432/ubot_db'}
+    apps: {'B0F': {'models': ['database.models', 'aerich.models'], 'default_connection': 'default'}}
+2023-03-21 20:41:17,784 | bot | INFO | Signed into Discord as Bronn#4490 (ID: 1079857104598356078
+
+2023-03-21 21:33:21,612 | bot | WARNING | abcded
+2023-03-21 21:33:31,901 | bot | ERROR | abcded

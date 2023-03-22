@@ -4,13 +4,12 @@ import sys
 from logging import Logger, handlers
 from pathlib import Path
 from typing import Optional, TYPE_CHECKING, cast
-
 import coloredlogs
 import sentry_sdk
 from sentry_sdk.integrations.logging import LoggingIntegration
-# from sentry_sdk.integrations.redis import RedisIntegration
 
-from bot import constants
+# from sentry_sdk.integrations.redis import RedisIntegration
+import constants
 
 TRACE_LEVEL = 5
 
@@ -56,6 +55,7 @@ def setup() -> None:
         log_file.parent.mkdir(exist_ok=True)
         file_handler = handlers.RotatingFileHandler(log_file, maxBytes=5242880, backupCount=7, encoding="utf8")
         file_handler.setFormatter(log_format)
+        file_handler.setLevel(logging.WARNING)
         root_log.addHandler(file_handler)
 
     if "COLOREDLOGS_LEVEL_STYLES" not in os.environ:
@@ -64,6 +64,7 @@ def setup() -> None:
             "trace": {"color": 246},
             "critical": {"background": "red"},
             "debug": coloredlogs.DEFAULT_LEVEL_STYLES["info"],
+            "info": coloredlogs.DEFAULT_LEVEL_STYLES["spam"],
         }
 
     if "COLOREDLOGS_LOG_FORMAT" not in os.environ:
@@ -118,3 +119,7 @@ def _set_trace_loggers() -> None:
         else:
             for logger_name in level_filter.strip(",").split(","):
                 get_logger(logger_name).setLevel(TRACE_LEVEL)
+
+
+def return_error():
+    return "{}. {}, line: {}".format(sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2].tb_lineno)

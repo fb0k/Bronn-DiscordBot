@@ -23,7 +23,7 @@ from tortoise.exceptions import IntegrityError
 from database.models import Guild
 from collections import defaultdict
 import constants
-from log import get_logger
+from log import get_logger, return_error
 from database import tortoise_config
 
 
@@ -37,7 +37,7 @@ class Bot(commands.Bot):
 
     def __init__(
         self,
-        development_mode: str = None,
+        development_mode: str = True,
         extensions_dir: str = "exts",
         *args,
         **kwargs,
@@ -99,21 +99,27 @@ class Bot(commands.Bot):
         self.load_extensions()
 
     def load_extensions(self, reraise_exceptions: bool = False) -> Tuple[Tuple[str], Tuple[str]]:
+        bot_dir = os.path.dirname(__file__)
         loaded_extensions = set()
         failed_extensions = set()
         for file in map(
             lambda file_path: file_path.replace(os.path.sep, ".")[:-3],
-            glob(f"{self.extensions_dir}/**/*.py", recursive=True),
+            glob(f"{self.extensions_dir}/**/*.py", recursive=True, root_dir=bot_dir),
         ):
             try:
-                self.load_extension(file)
-                loaded_extensions.add(file)
-                log.info(f"[bright_green][EXTENSION][/bright_green] [blue3]{file} LOADED[/blue3]")
+                if file.endswith("__init__"):
+                    pass
+                else:
+                    self.load_extension(file)
+                    loaded_extensions.add(file)
+                    log.info(f"Loaded {file}")
             except Exception as e:
                 failed_extensions.add(file)
-                log.info(f"[bright red][EXTENSION ERROR][/bright red] [blue3]FAILED TO LOAD COG {file}[/blue3]")
+                log.error(f"{file.upper()}")
                 if not reraise_exceptions:
-                    traceback.print_exception(type(e), e, e.__traceback__)
+                    # traceback.print_exception(type(e), e, e.__traceback__)
+                    print(return_error())
+
                 else:
                     raise e
         result = (tuple(loaded_extensions), tuple(failed_extensions))
@@ -139,17 +145,17 @@ class Bot(commands.Bot):
         await Tortoise.init(tortoise_config.TORTOISE_CONFIG)
         # await Tortoise.generate_schemas()
         self.status.start()
-        print(f"[blue3]Signed into Discord as {self.user} (ID: {self.user.id}[/blue3])\n")
+        log.info(f"Signed into Discord as {self.user} (ID: {self.user.id})\n")
 
-    async def on_error(self, event: str, *args, **kwargs) -> None:
-        """Log errors raised in event listeners rather than printing them to stderr."""
+    # async def on_error(self, event: str, *args, **kwargs) -> None:
+    #     """Log errors raised in event listeners rather than printing them to stderr."""
 
-        with push_scope() as scope:
-            scope.set_tag("event", event)
-            scope.set_extra("args", args)
-            scope.set_extra("kwargs", kwargs)
+    #     with push_scope() as scope:
+    #         scope.set_tag("event", event)
+    #         scope.set_extra("args", args)
+    #         scope.set_extra("kwargs", kwargs)
 
-            log.exception(f"Unhandled exception in {event}.")
+    #         log.exception(f"Unhandled exception in {event}.")
 
     def _start(self) -> None:
         self.run(constants.Bot.token, reconnect=True)
@@ -200,9 +206,9 @@ async def load(ctx: commands.Context, *, extentions: str) -> None:
 async def on_guild_join(guild: discord.Guild) -> None:
     try:
         guild: Guild = await Guild.create(discord_id=guild.id, language="en", prefix="-")
-        log.info(f"[blue3][GUILD] JOINED GUILD {guild.name}) (ID: {guild.id}) [/blue3]")
+        log.info(f"JOINED GUILD {guild.name} - ID: {guild.id}")
     except IntegrityError:
-        log.info(f"[blue3]{guild.name} ({guild.id}) Has Reinvited {constants.Bot.name}.[/blue3]")
+        log.info(f"{guild.name} ({guild.id}) Has Reinvited {constants.Bot.name}.")
 
 
 # -- Bot Checks

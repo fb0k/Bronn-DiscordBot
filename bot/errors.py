@@ -1,12 +1,14 @@
 import traceback
-
+import typing
 import discord
 import humanize
 from discord.ext import commands
 from discord.ext.commands import Bot, BucketType
-
+from log import get_logger
 from utils.custommetacog import CustomCog as Cog
 import constants
+
+log = get_logger(__name__)
 
 
 class ErrorHandler(Cog, command_attrs=dict(hidden=True), emoji=constants.Emojis.pycord):
@@ -45,6 +47,23 @@ class ErrorHandler(Cog, command_attrs=dict(hidden=True), emoji=constants.Emojis.
             await ctx.send(embed=embed)
         else:
             traceback.print_exception(type(error), error, error.__traceback__)
+
+
+async def handle_role_change(
+    member: discord.Member, coro: typing.Callable[..., typing.Coroutine], role: discord.Role
+) -> None:
+    """
+    Change `member`'s cooldown role via awaiting `coro` and handle errors.
+    `coro` is intended to be `discord.Member.add_roles` or `discord.Member.remove_roles`.
+    """
+    try:
+        await coro(role)
+    except discord.NotFound:
+        log.debug(f"Failed to change role for {member} ({member.id}): member not found")
+    except discord.Forbidden:
+        log.debug(f"Forbidden to change role for {member} ({member.id}); " f"possibly due to role hierarchy")
+    except discord.HTTPException as e:
+        log.error(f"Failed to change role for {member} ({member.id}): {e.status} {e.code}")
 
 
 def setup(bot) -> None:

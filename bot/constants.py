@@ -12,7 +12,6 @@ will default to the values passed to the `default` kwarg.
 import os
 from enum import Enum
 from typing import Any, Final, Optional
-import database
 from pydantic import BaseModel, BaseSettings, root_validator
 
 # Load env files
@@ -54,9 +53,9 @@ class _Bot(EnvConfig):
     prefix = "."
     sentry_dsn = "https://5a6c0fa78ab745b6b6166ff6ec413e22@o4504850831114240.ingest.sentry.io/4504850837536768"
     token = "bot_token"
-    trace_loggersr = "*"
+    trace_loggers = "*"
     owners_ids = [
-        "my_id",
+        "1079857104598356078",
     ]
     support_server_id = 893622012717719634
     terms_of_service = ""
@@ -64,48 +63,6 @@ class _Bot(EnvConfig):
 
 
 Bot = _Bot()
-
-
-class _Database(EnvConfig):
-
-    EnvConfig.Config.env_prefix = "database_"
-
-    uri = "db_url2"
-    model_path = database.models
-    # timezone = "UTC"
-    use_tz = False
-
-
-Database = _Database()
-
-
-# class _TortoiseConfig(EnvConfig):
-
-#     EnvConfig.Config.env_prefix = "tortoiseconfig_"
-
-#     connections = {"default": Database.uri}
-#     apps = {Bot.name: {
-#             "models": [Database.model_path, "aerich.models"],
-#             "default_connection": "default",
-#             }
-#             }
-#     use_tz = Database.use_tz
-#     timezone = Database.timezone
-
-
-# TortoiseConfig = _TortoiseConfig()
-
-TORTOISE_CONFIG: dict[str, Any] = {
-    "connections": {"default": "db_url2"},
-    "apps": {
-        f"{Bot.name}": {
-            "models": [f"{Database.model_path}", "aerich.models"],
-            "default_connection": "default",
-        }
-    },
-    "use_tz": Database.use_tz,
-    # "timezone": f'{Database.timezone},
-}
 
 
 class _B0FChannels(EnvConfig):
@@ -139,8 +96,9 @@ class _Roles(EnvConfig):
     EnvConfig.Config.env_prefix = "roles_"
 
     # Self-assignable roles, see the Subscribe cog
-    admins = 518565788744024082
-    announcements = 463658397560995840
+    admins = 1082731698002874378
+    lovefest = 1087847705591677108
+    announcements = 1087527317573742593
     moderators = 542431903886606399
     helpers = 897568414044938310
     staff = 988801794668908655
