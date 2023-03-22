@@ -12,7 +12,6 @@ from log import get_logger
 from utils.paginator import LinePaginator
 
 
-
 log = get_logger(__name__)
 
 COMMANDS_PER_PAGE = 8
@@ -21,6 +20,7 @@ PREFIX = constants.Bot.prefix
 NOT_ALLOWED_TO_RUN_MESSAGE = "***You cannot run this command.***\n\n"
 
 Category = namedtuple("Category", ["name", "description", "cogs"])
+
 
 class SubcommandButton(ui.Button):
     """
@@ -39,7 +39,7 @@ class SubcommandButton(ui.Button):
         custom_id: Optional[str] = None,
         url: Optional[str] = None,
         emoji: Optional[Union[str, Emoji, PartialEmoji]] = None,
-        row: Optional[int] = None
+        row: Optional[int] = None,
     ):
         super().__init__(
             style=style, label=label, disabled=disabled, custom_id=custom_id, url=url, emoji=emoji, row=row
@@ -76,7 +76,7 @@ class GroupButton(ui.Button):
         custom_id: Optional[str] = None,
         url: Optional[str] = None,
         emoji: Optional[Union[str, Emoji, PartialEmoji]] = None,
-        row: Optional[int] = None
+        row: Optional[int] = None,
     ):
         super().__init__(
             style=style, label=label, disabled=disabled, custom_id=custom_id, url=url, emoji=emoji, row=row
@@ -151,7 +151,6 @@ class CustomHelpCommand(HelpCommand):
 
     def __init__(self):
         super().__init__(command_attrs={"help": "Shows help for bot commands"})
-
 
     async def command_callback(self, ctx: Context, *, command: str = None) -> None:
         """Attempts to match the provided query with a valid command or cog."""
@@ -387,7 +386,7 @@ class CustomHelpCommand(HelpCommand):
             # Split cogs or categories which have too many commands to fit in one page.
             # The length of commands is included for later use when aggregating into pages for the paginator.
             for index in range(0, len(sorted_commands), COMMANDS_PER_PAGE):
-                truncated_lines = command_detail_lines[index:index + COMMANDS_PER_PAGE]
+                truncated_lines = command_detail_lines[index : index + COMMANDS_PER_PAGE]
                 joined_lines = "".join(truncated_lines)
                 cog_or_category_pages.append((f"**{cog_or_category}**{joined_lines}", len(truncated_lines)))
 
@@ -429,4 +428,3 @@ class Help(Cog):
 def setup(bot) -> None:
     """Load the Help cog."""
     bot.add_cog(Help(bot))
-    
