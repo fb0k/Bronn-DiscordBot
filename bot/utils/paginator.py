@@ -10,10 +10,10 @@ import constants
 from log import get_logger
 
 
-FIRST_EMOJI = "\u23EE"   # [:track_previous:]
-LEFT_EMOJI = "\u2B05"    # [:arrow_left:]
-RIGHT_EMOJI = "\u27A1"   # [:arrow_right:]
-LAST_EMOJI = "\u23ED"    # [:track_next:]
+FIRST_EMOJI = "\u23EE"  # [:track_previous:]
+LEFT_EMOJI = "\u2B05"  # [:arrow_left:]
+RIGHT_EMOJI = "\u27A1"  # [:arrow_right:]
+LAST_EMOJI = "\u23ED"  # [:track_next:]
 DELETE_EMOJI = constants.Emojis.trashcan  # [:trashcan:]
 
 PAGINATION_EMOJI = (FIRST_EMOJI, LEFT_EMOJI, RIGHT_EMOJI, LAST_EMOJI, DELETE_EMOJI)
@@ -36,17 +36,12 @@ def reaction_check(
     If `allow_mods` is True, allow users with moderator roles even if they're not in `allowed_users`.
     """
     right_reaction = (
-        user != bot.instance.user
-        and reaction.message.id == message_id
-        and str(reaction.emoji) in allowed_emoji
+        user != bot.instance.user and reaction.message.id == message_id and str(reaction.emoji) in allowed_emoji
     )
     if not right_reaction:
         return False
 
-    is_moderator = (
-        allow_mods
-        and any(role.id in constants.MODERATION_ROLES for role in getattr(user, "roles", []))
-    )
+    is_moderator = allow_mods and any(role.id in constants.MODERATION_ROLES for role in getattr(user, "roles", []))
 
     if user.id in allowed_users or is_moderator:
         log.trace(f"Allowed reaction {reaction} by {user} on {reaction.message.id}.")
@@ -56,10 +51,9 @@ def reaction_check(
         asyncio.Task(
             reaction.message.remove_reaction(reaction.emoji, user),
             suppressed_exceptions=(discord.HTTPException,),
-            name=f"remove_reaction-{reaction}-{reaction.message.id}-{user}"
+            name=f"remove_reaction-{reaction}-{reaction.message.id}-{user}",
         )
         return False
-
 
 
 class EmptyPaginatorEmbedError(Exception):
@@ -86,12 +80,12 @@ class LinePaginator(Paginator):
 
     def __init__(
         self,
-        prefix: str = '```',
-        suffix: str = '```',
+        prefix: str = "```",
+        suffix: str = "```",
         max_size: int = 4000,
         scale_to_size: int = 4000,
         max_lines: t.Optional[int] = None,
-        linesep: str = "\n"
+        linesep: str = "\n",
     ) -> None:
         """
         This function overrides the Paginator.__init__ from inside discord.ext.commands.
@@ -102,12 +96,7 @@ class LinePaginator(Paginator):
         if max_size > 4000:
             raise ValueError(f"max_size must be <= 4,000 characters. ({max_size} > 4000)")
 
-        super().__init__(
-            prefix,
-            suffix,
-            max_size - len(suffix),
-            linesep
-        )
+        super().__init__(prefix, suffix, max_size - len(suffix), linesep)
 
         if scale_to_size < max_size:
             raise ValueError(f"scale_to_size must be >= max_size. ({scale_to_size} < {max_size})")
@@ -122,7 +111,7 @@ class LinePaginator(Paginator):
         self._count = len(prefix) + 1  # prefix + newline
         self._pages = []
 
-    def add_line(self, line: str = '', *, empty: bool = False) -> None:
+    def add_line(self, line: str = "", *, empty: bool = False) -> None:
         """
         Adds a line to the current page.
         If a line on a page exceeds `max_size` characters, then `max_size` will go up to
@@ -143,7 +132,7 @@ class LinePaginator(Paginator):
                 line, remaining_words = self._split_remaining_words(line, max_chars)
                 if len(line) > self.scale_to_size:
                     log.debug("Could not continue to next page, truncating line.")
-                    line = line[:self.scale_to_size]
+                    line = line[: self.scale_to_size]
 
         # Check if we should start a new page or continue the line on the current one
         if self.max_lines is not None and self._linecount >= self.max_lines:
@@ -159,7 +148,7 @@ class LinePaginator(Paginator):
         self._current_page.append(line)
 
         if empty:
-            self._current_page.append('')
+            self._current_page.append("")
             self._count += 1
 
         # Start a new page if there were any overflow words
@@ -213,7 +202,7 @@ class LinePaginator(Paginator):
 
         return (
             " ".join(reduced_words) + "..." if remaining_words else "",
-            continuation_header + " ".join(remaining_words) if remaining_words else None
+            continuation_header + " ".join(remaining_words) if remaining_words else None,
         )
 
     @classmethod
@@ -247,8 +236,9 @@ class LinePaginator(Paginator):
         >>> embed.set_author(name="Some Operation", url=url, icon_url=icon)
         >>> await LinePaginator.paginate([line for line in lines], ctx, embed)
         """
-        paginator = cls(prefix=prefix, suffix=suffix, max_size=max_size, max_lines=max_lines,
-                        scale_to_size=scale_to_size)
+        paginator = cls(
+            prefix=prefix, suffix=suffix, max_size=max_size, max_lines=max_lines, scale_to_size=scale_to_size
+        )
         current_page = 0
 
         if not restrict_to_user:
