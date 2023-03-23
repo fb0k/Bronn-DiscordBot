@@ -4,6 +4,7 @@ from discord.ext.commands import Context
 from tortoise import fields
 from tortoise.expressions import F
 from tortoise.models import Model
+from tortoise.contrib.postgres.fields import ArrayField
 
 
 # aioredis.util._converters[bool] = lambda x: b"1" if x else b"0"
@@ -119,6 +120,7 @@ class Guild(Model):
     automod_log = fields.BigIntField(default=0)
     message_log = fields.BigIntField(default=0)
     mod_log = fields.BigIntField(default=0)
+    mod_channels = ArrayField(element_type=int)
     suggestions = fields.BigIntField(default=0)
 
     changelog_enabled = fields.BooleanField(default=False)
@@ -158,6 +160,12 @@ class GuildEvent(Model):
     new = fields.TextField(default=None, unique=False)
     timestamp = fields.DatetimeField(auto_now_add=True)
     guild = fields.ForeignKeyField("B0F.Guild", related_name="GuildEvent")
+
+
+# class Channel(Model):
+#     id = fields.BigIntField(pk=True)
+#     is_mod = fields.BooleanField(default=False)
+#     guild = fields.ForeignKeyField("B0F.Guild", related_name="channels")
 
 
 class Invite(Model):

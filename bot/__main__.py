@@ -4,6 +4,7 @@ from log import get_logger, setup_sentry
 # import __init__
 
 
+
 setup_sentry()
 bot: Bot = Bot(development_mode="development")
 
