@@ -222,7 +222,7 @@ class Users(Model):
     commands_run = fields.BigIntField(default=0, null=True)
     tracking_enabled = fields.BooleanField(default=True)
     api_key = fields.ForeignKeyField("B0F.Keys", related_name="Users", null=True)
-    numwarns = commands_run = fields.BigIntField(default=0, null=True)
+    # numwarns = commands_run = fields.BigIntField(default=0, null=True)
 
     async def increment(self, increase_no: int = 1):
         self.commands_run = F("commands_run") + increase_no
@@ -230,17 +230,17 @@ class Users(Model):
         await self.refresh_from_db(fields=["commands_run"])
         return self.commands_run
 
-    async def incwarns(self, increase_no: int = 1):
-        self.numwarns = F("numwarns") + increase_no
-        await self.save(update_fields=["numwarns"])
-        await self.refresh_from_db(fields=["numwarns"])
-        return self.numwarns
+    # async def incwarns(self, increase_no: int = 1):
+    #     self.numwarns = F("numwarns") + increase_no
+    #     await self.save(update_fields=["numwarns"])
+    #     await self.refresh_from_db(fields=["numwarns"])
+    #     return self.numwarns
 
-    async def decwarns(self, increase_no: int = 1):
-        self.numwarns = F("numwarns") - increase_no
-        await self.save(update_fields=["numwarns"])
-        await self.refresh_from_db(fields=["numwarns"])
-        return self.numwarns
+    # async def decwarns(self, increase_no: int = 1):
+    #     self.numwarns = F("numwarns") - increase_no
+    #     await self.save(update_fields=["numwarns"])
+    #     await self.refresh_from_db(fields=["numwarns"])
+    #     return self.numwarns
 
 
 class Tags(Model):
