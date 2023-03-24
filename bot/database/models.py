@@ -115,12 +115,12 @@ class Guild(Model):
     discord_id = fields.BigIntField(pk=True)
     language = fields.TextField(default="en")
     prefix = fields.TextField(default=".")
-    timezone = fields.TextField(default="UTC")
+    # timezone = fields.TextField(default="UTC")
     automod = fields.BooleanField(default=False)
     automod_log = fields.BigIntField(default=0)
     message_log = fields.BigIntField(default=0)
     mod_log = fields.BigIntField(default=0)
-    mod_channels = ArrayField(element_type=int)
+    # mod_channels = ArrayField(element_type=int)
     suggestions = fields.BigIntField(default=0)
 
     changelog_enabled = fields.BooleanField(default=False)
@@ -160,12 +160,6 @@ class GuildEvent(Model):
     new = fields.TextField(default=None, unique=False)
     timestamp = fields.DatetimeField(auto_now_add=True)
     guild = fields.ForeignKeyField("B0F.Guild", related_name="GuildEvent")
-
-
-# class Channel(Model):
-#     id = fields.BigIntField(pk=True)
-#     is_mod = fields.BooleanField(default=False)
-#     guild = fields.ForeignKeyField("B0F.Guild", related_name="channels")
 
 
 class Invite(Model):
@@ -214,10 +208,10 @@ class AFKModel(Model):
 
 
 class Warns(Model):
-    key = fields.IntField(pk=True)
+    id = fields.BigIntField(pk=True)
     warn_id = fields.TextField()
     target_id = fields.BigIntField()
-    warner_id = fields.BigIntField()
+    mod_id = fields.BigIntField()
     guild = fields.ForeignKeyField("B0F.Guild", related_name="Warns")
     reason = fields.TextField(null=True)
     created_at = fields.DatetimeField(null=True, auto_now_add=True)
@@ -228,6 +222,7 @@ class Users(Model):
     commands_run = fields.BigIntField(default=0, null=True)
     tracking_enabled = fields.BooleanField(default=True)
     api_key = fields.ForeignKeyField("B0F.Keys", related_name="Users", null=True)
+    numwarns = commands_run = fields.BigIntField(default=0, null=True)
 
     async def increment(self, increase_no: int = 1):
         self.commands_run = F("commands_run") + increase_no
@@ -235,8 +230,20 @@ class Users(Model):
         await self.refresh_from_db(fields=["commands_run"])
         return self.commands_run
 
+    async def incwarns(self, increase_no: int = 1):
+        self.numwarns = F("numwarns") + increase_no
+        await self.save(update_fields=["numwarns"])
+        await self.refresh_from_db(fields=["numwarns"])
+        return self.numwarns
 
-class TagModel(Model):
+    async def decwarns(self, increase_no: int = 1):
+        self.numwarns = F("numwarns") - increase_no
+        await self.save(update_fields=["numwarns"])
+        await self.refresh_from_db(fields=["numwarns"])
+        return self.numwarns
+
+
+class Tags(Model):
     tag_id = fields.IntField(pk=True)
     name = fields.TextField()
     created_at = fields.DatetimeField(null=True, auto_now_add=True)
@@ -247,6 +254,15 @@ class TagModel(Model):
 
     def __str__(self):
         return self.content
+
+
+class Filterlist(Model):
+    id = fields.IntField(pk=True)
+    type = fields.CharField(max_length=20)
+    allowed = fields.BooleanField(default=False)
+    comment = fields.TextField(default=None, null=True)
+    created_at = fields.DatetimeField(null=True, auto_now_add=True)
+    guild = fields.ForeignKeyField("B0F.Guild", related_name="FilterList")
 
 
 class Keys(Model):
