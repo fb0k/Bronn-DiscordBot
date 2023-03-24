@@ -52,12 +52,7 @@ class Bot(commands.Bot):
         self.session: ClientSession = aiohttp.ClientSession()
         self.bot_owners = constants.Bot.owners_ids
         self.development_mode: str = development_mode
-        self.github: str = constants.URLs.github
-        self.support_server: str = constants.URLs.support_server
-        self.documentation: str = constants.URLs.documentation
-        self.invite_url: str = constants.URLs.invite_url
         self.redis_path = constants.Redis.uri
-        self.guild_id = constants.Guild.id
         self.command_prefix = commands.when_mentioned_or(constants.Bot.prefix)
 
         # -- Tuple of all activities the bot will display as a status
@@ -72,18 +67,13 @@ class Bot(commands.Bot):
         )
 
         # -- Intents
-        intents: Intents = discord.Intents.default()
-        intents.members = True
-        intents.typing = False
-        intents.presences = True
-        intents.message_content = True
+        intents: Intents = discord.Intents.all()
         allowed_roles = list({discord.Object(id_) for id_ in constants.MODERATION_ROLES})
         chunk_guilds_at_startup: Literal[False] = False
         allowed_mentions: AllowedMentions = discord.mentions.AllowedMentions(everyone=False, roles=allowed_roles)
         stuff_to_cache: MemberCacheFlags = MemberCacheFlags.from_intents(intents)
 
         super().__init__(
-            # setup(),
             intents=intents,
             command_prefix=self.command_prefix,
             case_insensitive=True,
@@ -147,7 +137,7 @@ class Bot(commands.Bot):
     async def on_ready(self) -> None:
         """Called when we have successfully connected to a gateway"""
         await Tortoise.init(tortoise_config.TORTOISE_CONFIG)
-        # await Tortoise.generate_schemas()
+        await Tortoise.generate_schemas()
         self.status.start()
         log.info(f"Signed into Discord as {self.user} (ID: {self.user.id})\n")
 
@@ -163,6 +153,24 @@ class Bot(commands.Bot):
 
     def _start(self) -> None:
         self.run(constants.Bot.token, reconnect=True)
+
+    def insert_item_into_filter_list_cache(self, item: dict[str, str]) -> None:
+        """Add an item to the bots filter_list_cache."""
+        type_ = item["type"]
+        allowed = item["allowed"]
+
+        self.filter_list_cache[f"{type_}.{allowed}"] = {
+            "id": item["id"],
+            "created_at": item["created_at"],
+            "comment": item["comment"],
+        }
+
+    async def cache_filter_list_data(self) -> None:
+        """Cache all the data in the FilterList on the site."""
+        full_cache = await self.api_client.get("bot/filter-lists")
+
+        for item in full_cache:
+            self.insert_item_into_filter_list_cache(item)
 
 
 bot: Bot = Bot(development_mode="development")
@@ -209,8 +217,8 @@ async def load(ctx: commands.Context, *, extentions: str) -> None:
 @bot.event
 async def on_guild_join(guild: discord.Guild) -> None:
     try:
-        guild: Guild = await Guild.create(discord_id=guild.id, language="en", prefix="-")
-        log.info(f"JOINED GUILD {guild.name} - ID: {guild.id}")
+        await Guild.create(discord_id=guild.id, language="en", prefix=".")
+        log.info(f"Joined Guild {guild.name} - ID: {guild.id}")
     except IntegrityError:
         log.info(f"{guild.name} ({guild.id}) Has Reinvited {constants.Bot.name}.")
 
