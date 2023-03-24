@@ -1,12 +1,9 @@
-from Bronn import Bot
+from Bronn import Bot, bot
 import sys
 from log import get_logger, setup_sentry
-# import __init__
-
 
 
 setup_sentry()
-bot: Bot = Bot(development_mode="development")
 
 
 if __name__ == "__main__":
