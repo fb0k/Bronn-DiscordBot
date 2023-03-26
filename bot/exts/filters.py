@@ -49,13 +49,11 @@ class Filters(Cog):
                 # self.bot.insert_item_into_filter_list_cache(item)
                 item.di
                 await ctx.message.add_reaction("✅")
-                await ctx.reply(f"File `{file_type}` added to the filterlist.")
+                await ctx.reply(f"File `{file_type}` added to the whitelist.")
         except OperationalError:
             await ctx.message.add_reaction("❌")
-            log.debug(
-                f"{ctx.author} tried to add filetype to a filterlist, but tortoise returned a operational error. "
-            )
-            raise BadArgument(f"Unable to add the {file_type} to the filterlist. " "Check args and variables")
+            log.debug(f"{ctx.author} tried to add filetype to whitelist, but tortoise returned a operational error. ")
+            raise BadArgument(f"Unable to add the {file_type} to the whitelist. " "Check args and variables")
 
     @command(name="blacklist", aliases=("denylist", "deny", "bl", "dl"))
     async def blacklist(
