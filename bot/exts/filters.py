@@ -49,7 +49,7 @@ class Filters(Cog):
                 # self.bot.insert_item_into_filter_list_cache(item)
                 item.di
                 await ctx.message.add_reaction("✅")
-                await ctx.reply(f"File `{file_type}` added to the whitelist.")
+                await ctx.reply(f"File `{file_type}` whitelisted.")
         except OperationalError:
             await ctx.message.add_reaction("❌")
             log.debug(f"{ctx.author} tried to add filetype to whitelist, but tortoise returned a operational error. ")
@@ -70,7 +70,7 @@ class Filters(Cog):
             file_type = f".{file_type}"
 
         # Find the content and delete it.
-        log.trace(f"Trying to blacklist the {file_type} item in the filterlist")
+        log.trace(f"Trying to blacklist the {file_type} item in the blacklist")
         try:
             if await Filterlist.exists(type=file_type, guild=ctx.guild.id, allowed=allow):
                 await ctx.message.add_reaction("✅")
@@ -89,9 +89,9 @@ class Filters(Cog):
         except OperationalError:
             await ctx.message.add_reaction("❌")
             log.debug(
-                f"{ctx.author} tried to add filetype to a filterlist, but tortoise returned a operational error. "
+                f"{ctx.author} tried to add filetype to the blacklist, but tortoise returned a operational error. "
             )
-            raise BadArgument(f"Unable to add the {file_type} to the filterlist. Check args and variables")
+            raise BadArgument(f"Unable to add the {file_type} to the blacklist. Check args and variables")
 
     async def _list_all_data(self, ctx: Context, allow: bool, file_type: str) -> None:
         """Paginate and display all items in a filterlist."""
