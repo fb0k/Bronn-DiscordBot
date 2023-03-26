@@ -39,16 +39,21 @@ class Filters(Cog):
                 await ctx.message.add_reaction("✅")
                 await ctx.reply("This extension is already whitelisted.")
             else:
-                item = await Filterlist.update_or_create(
+                if await Filterlist.update_or_create(
                     type=file_type,
                     guild_id=ctx.guild.id,
                     allowed=allow,
                     comment=comment,
-                )
-                # self.bot.insert_item_into_filter_list_cache(item)
-                item.di
-                await ctx.message.add_reaction("✅")
-                await ctx.reply(f"File `{file_type}` whitelisted.")
+                ):
+                    item = {"type": file_type, "guild_id": ctx.guild.id, "allowed": allow, "comment": comment}
+                    self.bot.insert_item_into_filter_list_cache(item)
+                    await ctx.message.add_reaction("✅")
+                    await ctx.reply(f"File `{file_type}` whitelisted.")
+                else:
+                    await ctx.message.add_reaction("❌")
+                    log.debug(
+                        f"{ctx.author} tried to add filetype to whitelist, but update_or_create() returned False. "
+                    )
         except OperationalError:
             await ctx.message.add_reaction("❌")
             log.debug(f"{ctx.author} tried to add filetype to whitelist, but tortoise returned a operational error. ")
@@ -92,24 +97,31 @@ class Filters(Cog):
             )
             raise BadArgument(f"Unable to add the {file_type} to the blacklist. Check args and variables")
 
-    async def _list_all_data(self, ctx: Context, allow: bool, file_type: str) -> None:
+    @command(name="filterlist", aliases=("filelist", "fl", "fetch"))
+    async def _list_all_data(self, ctx: Context, allowed: bool) -> None:
         """Paginate and display all items in a filterlist."""
-        # result = self.bot.filter_list_cache[f"{file_type}.{allowed}"]
-        guild = ctx.guild.id
-        result = await Filterlist.filter(guild_id=guild)
+        # await self.bot.cache_filter_list_data()
+        result = self.bot.filter_list_cache[f"{ctx.guild.id}"]
+        result = self.bot.filter_list_cache[f"{ctx.guild.id}.{allowed}"]
+        # guild = ctx.guild.id
+        # result = await Filterlist.filter(guild_id=guild)
         # Build a list of lines we want to show in the paginator
         lines = []
-        for item in result:
-            line = f"• `{item.type}`"
+        for content, metadata in result.items():
+            line = f"• `{content}`"
 
-            if comment := item.comment:
+            if comment := metadata.get("comment"):
                 line += f" - {comment}"
 
             lines.append(line)
         lines = sorted(lines)
 
         # Build the embed
-        embed = discord.Embed(title=f"Current {ctx.guild} Filterlist", colour=Colours.blue)
+        if allowed is False:
+            embed = discord.Embed(title=f"{ctx.guild} latest Blacklist", colour=Colours.error)
+        else:
+            embed = discord.Embed(title=f"{ctx.guild} latest Whitelist", colour=Colours.blue)
+
         log.trace(f"Trying to list {len(result)} items from the {ctx.guild} Filterlist")
 
         if result:
@@ -119,25 +131,18 @@ class Filters(Cog):
             await ctx.send(embed=embed)
             await ctx.message.add_reaction("❌")
 
+    @command(name="synclist", aliases=("sl",))
     async def _sync_data(self, ctx: Context) -> None:
         """Syncs the filterlists with the API."""
         try:
-            log.trace("Attempting to sync FilterList cache with data from the API.")
-            await self.bot.cache_filter_list_data()
+            log.trace("Attempting to sync FilterList cache with data from the Database.")
+            await self.bot.cache_filter_list_data(ctx)
             await ctx.message.add_reaction("✅")
         except OperationalError as e:
-            log.debug(f"{ctx.author} tried to sync FilterList cache data but the API raised an unexpected error: {e}")
+            log.debug(
+                f"{ctx.author} tried to sync FilterList cache data but the Database raised an unexpected error: {e}"
+            )
             await ctx.message.add_reaction("❌")
-
-    @command(name="filterlist", aliases=("typelist", "fl", "fetch"))
-    async def get_list(self, ctx: Context, file_type: str) -> None:
-        """Get the contents of a specified allowlist."""
-        await self._list_all_data(ctx, True, file_type)
-
-    @command(name="synclist", aliases=("sl",))
-    async def allow_sync(self, ctx: Context) -> None:
-        """Syncs both allowlists and denylists with the API."""
-        await self._sync_data(ctx)
 
     async def cog_check(self, ctx: Context) -> bool:
         """Only allow moderators to invoke the commands in this cog."""
