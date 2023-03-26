@@ -25,6 +25,7 @@ from collections import defaultdict
 import constants
 from log import get_logger, return_error
 from database import tortoise_config
+from database.models import Filterlist
 import __init__
 
 
@@ -156,20 +157,25 @@ class Bot(commands.Bot):
 
     def insert_item_into_filter_list_cache(self, item: dict[str, str]) -> None:
         """Add an item to the bots filter_list_cache."""
-        type_ = item["type"]
-        allowed = item["allowed"]
+        file = item["type"]
+        allow = item["allowed"]
+        guild = item["guild_id"]
 
-        self.filter_list_cache[f"{type_}.{allowed}"] = {
+        self.filter_list_cache[f"{guild}.{allow}"][file] = {
+            "file": item["type"],
             "id": item["id"],
-            "created_at": item["created_at"],
+            "guild_id": guild,
+            "allow": allow,
             "comment": item["comment"],
         }
 
-    async def cache_filter_list_data(self) -> None:
-        """Cache all the data in the FilterList on the site."""
-        full_cache = await self.api_client.get("bot/filter-lists")
+    async def cache_filter_list_data(self, ctx: discord.ApplicationContext) -> None:
+        """Cache all the data in the FilterList on the database."""
+        result = await Filterlist.filter(guild_id=f"{ctx.guild.id}").values(
+            "id", "allowed", "comment", "created_at", "type", "guild_id"
+        )
 
-        for item in full_cache:
+        for item in result:
             self.insert_item_into_filter_list_cache(item)
 
 
