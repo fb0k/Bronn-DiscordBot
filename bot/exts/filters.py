@@ -1,9 +1,8 @@
-from collections import defaultdict
 from typing import Optional
 from tortoise.exceptions import OperationalError
 from database.models import Filterlist
 import discord
-from discord.ext.commands import BadArgument, Cog, Context, command, group, has_any_role
+from discord.ext.commands import BadArgument, Cog, Context, command, has_any_role
 import constants
 from Bronn import Bot
 from constants import Colours
@@ -127,9 +126,7 @@ class Filters(Cog):
             await self.bot.cache_filter_list_data()
             await ctx.message.add_reaction("✅")
         except OperationalError as e:
-            log.debug(
-                f"{ctx.author} tried to sync FilterList cache data but " f"the API raised an unexpected error: {e}"
-            )
+            log.debug(f"{ctx.author} tried to sync FilterList cache data but the API raised an unexpected error: {e}")
             await ctx.message.add_reaction("❌")
 
     @command(name="filterlist", aliases=("typelist", "fl", "fetch"))
