@@ -4,7 +4,7 @@ from discord.ext.commands import Context
 from tortoise import fields
 from tortoise.expressions import F
 from tortoise.models import Model
-from tortoise.contrib.postgres.fields import ArrayField
+# from tortoise.contrib.postgres.fields import ArrayField
 
 
 # aioredis.util._converters[bool] = lambda x: b"1" if x else b"0"

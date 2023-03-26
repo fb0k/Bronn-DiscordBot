@@ -1,4 +1,4 @@
-from Bronn import Bot, bot
+from Bronn import bot
 import sys
 from log import get_logger, setup_sentry
 
