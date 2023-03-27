@@ -20,6 +20,11 @@ class Filters(Cog):
         self.bot = bot
         self.synced_guilds: list = []
 
+    async def check_guildcache(self, ctx: Context):
+        if ctx.guild.id not in self.synced_guilds:
+            await self.bot.cache_filter_list_data(ctx)
+            self.synced_guilds.append(ctx.guild.id)
+
     @command(name="whitelist", aliases=("allowlist", "allow", "al", "wl"))
     async def whitelist(
         self,
@@ -30,9 +35,7 @@ class Filters(Cog):
     ) -> None:
 
         # check if guild has cached files, otherwise get it from database
-        if ctx.guild.id not in self.synced_guilds:
-            await self.bot.cache_filter_list_data(ctx)
-            self.synced_guilds.append(ctx.guild.id)
+        await self.check_guildcache(ctx)
 
         # assert it has a leading dot.
         if not file_type.startswith("."):
@@ -78,9 +81,7 @@ class Filters(Cog):
         """Add a file type to the blacklist, remove it from whitelist if needed."""
 
         # check if guild has cached files, otherwise get it from database
-        if ctx.guild.id not in self.synced_guilds:
-            await self.bot.cache_filter_list_data(ctx)
-            self.synced_guilds.append(ctx.guild.id)
+        await self.check_guildcache(ctx)
 
         # assert it has a leading dot.
         if not file_type.startswith("."):
@@ -122,9 +123,8 @@ class Filters(Cog):
     async def _list_all_data(self, ctx: Context, allowed: bool) -> None:
         """Paginate and display all items in the filterlist."""
 
-        if ctx.guild.id not in self.synced_guilds:
-            await self.bot.cache_filter_list_data(ctx)
-            self.synced_guilds.append(ctx.guild.id)
+        # check if guild has cached files, otherwise get it from database
+        await self.check_guildcache(ctx)
 
         # Return only files that match the passed 'allowed: bool'
         result = {k: v for k, v in self.bot.filter_list_cache[f"{ctx.guild.id}"].items() if v["allow"] == allowed}
@@ -136,7 +136,7 @@ class Filters(Cog):
             line = f"• `{file}`"
 
             if comment := details.get("comment"):
-                line += f" - {details}"
+                line += f" - {comment}"
 
             lines.append(line)
         lines = sorted(lines)
@@ -145,7 +145,7 @@ class Filters(Cog):
         if allowed is False:
             embed = discord.Embed(title=f"{ctx.guild}'s latest blacklist", colour=Colours.error)
         else:
-            embed = discord.Embed(title=f"{ctx.guild} latest whitelist", colour=Colours.blue)
+            embed = discord.Embed(title=f"{ctx.guild}'s latest whitelist", colour=Colours.blue)
 
         log.trace(f"Trying to list {len(result)} items from the {ctx.guild} Filterlist")
 
