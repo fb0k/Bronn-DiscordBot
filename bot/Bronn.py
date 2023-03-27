@@ -161,9 +161,9 @@ class Bot(commands.Bot):
         allow = item["allowed"]
         guild = item["guild_id"]
 
-        self.filter_list_cache[f"{guild}.{allow}"][file] = {
+        self.filter_list_cache[f"{guild}"][file] = {
             "file": item["type"],
-            "id": item["id"],
+            # "id": item["id"],
             "guild_id": guild,
             "allow": allow,
             "comment": item["comment"],
