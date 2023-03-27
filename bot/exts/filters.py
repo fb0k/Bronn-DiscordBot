@@ -33,6 +33,7 @@ class Filters(Cog):
         comment: Optional[str] = None,
         allow: bool = True,
     ) -> None:
+        """Whitelist a file extension, remove it from blacklist if needed."""
 
         # check if guild has cached files, otherwise get it from database
         await self.check_guildcache(ctx)
@@ -78,7 +79,7 @@ class Filters(Cog):
         comment: Optional[str] = None,
         allow: bool = False,
     ) -> None:
-        """Add a file type to the blacklist, remove it from whitelist if needed."""
+        """Blacklist a file extension, remove it from whitelist if needed."""
 
         # check if guild has cached files, otherwise get it from database
         await self.check_guildcache(ctx)
@@ -154,19 +155,6 @@ class Filters(Cog):
         else:
             embed.description = "Hmmm, seems like there's nothing here yet."
             await ctx.send(embed=embed)
-            await ctx.message.add_reaction("❌")
-
-    @command(name="synclist", aliases=("sl",))
-    async def _sync_data(self, ctx: Context) -> None:
-        """Syncs the filterlists with the database."""
-        try:
-            log.trace("Attempting to sync FilterList cache with data from the Database.")
-            await self.bot.cache_filter_list_data(ctx)
-            await ctx.message.add_reaction("✅")
-        except OperationalError as e:
-            log.debug(
-                f"{ctx.author} tried to sync FilterList cache data but the Database raised an unexpected error: {e}"
-            )
             await ctx.message.add_reaction("❌")
 
     async def cog_check(self, ctx: Context) -> bool:
