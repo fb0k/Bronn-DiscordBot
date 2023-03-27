@@ -72,35 +72,38 @@ class Filters(Cog):
         comment: Optional[str] = None,
         allow: bool = False,
     ) -> None:
-        """Remove an item from a filterlist."""
+        """Add a file type to the blacklist, remove it from whitelist if needed."""
 
+        # check if guild has cached files, otherwise get it from database
         if ctx.guild.id not in self.synced_guilds:
             await self.bot.cache_filter_list_data(ctx)
             self.synced_guilds.append(ctx.guild.id)
 
-        # let's make sure it has a leading dot.
+        # assert it has a leading dot.
         if not file_type.startswith("."):
             file_type = f".{file_type}"
 
-        # Find the content and delete it.
-        log.trace(f"Trying to blacklist the {file_type} item in the blacklist")
+        # Find the file in the cache
+        log.trace(f"Trying to blacklist the {file_type}")
         item = self.bot.filter_list_cache[f"{ctx.guild.id}"].get(file_type)
 
         try:
+            # if in cache and not blacklisted, modify it
             if item is not None and item["allow"]:
                 revertbool = await Filterlist.get(type=file_type, guild=ctx.guild.id, allowed=True)
                 await revertbool.revertit(allow)
 
-            elif item is None:
+            elif item is None:  # if None, create it
                 await Filterlist.create(
                     type=file_type,
                     guild_id=ctx.guild.id,
                     allowed=allow,
                     comment=comment,
                 )
-            else:
+            else:  # if already blacklisted, pass
                 pass
 
+            # create dict from passes args, and store it in the cachelist
             item = {"type": file_type, "guild_id": ctx.guild.id, "allowed": allow, "comment": comment}
             self.bot.insert_item_into_filter_list_cache(item)
             await ctx.message.add_reaction("✅")
