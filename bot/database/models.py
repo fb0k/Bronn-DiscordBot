@@ -4,6 +4,7 @@ from discord.ext.commands import Context
 from tortoise import fields
 from tortoise.expressions import F
 from tortoise.models import Model
+
 # from tortoise.contrib.postgres.fields import ArrayField
 
 
@@ -263,6 +264,12 @@ class Filterlist(Model):
     comment = fields.TextField(default=None, null=True)
     created_at = fields.DatetimeField(null=True, auto_now_add=True)
     guild = fields.ForeignKeyField("B0F.Guild", related_name="FilterList")
+
+    async def revertit(self, allow: bool):
+        self.allowed = allow
+        await self.save(update_fields=["allowed"])
+        await self.refresh_from_db(fields=["allowed"])
+        return self.allowed
 
 
 class Keys(Model):
