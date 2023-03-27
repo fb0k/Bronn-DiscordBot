@@ -29,37 +29,40 @@ class Filters(Cog):
         allow: bool = True,
     ) -> None:
 
+        # check if guild has cached files, otherwise get it from database
         if ctx.guild.id not in self.synced_guilds:
             await self.bot.cache_filter_list_data(ctx)
             self.synced_guilds.append(ctx.guild.id)
 
-        # let's make sure it has a leading dot.
+        # assert it has a leading dot.
         if not file_type.startswith("."):
             file_type = f".{file_type}"
 
         # Try to add the item to the database
-        log.trace(f"Trying to set {allow} to the {file_type} file")
+        log.trace(f"Trying to whitelist the {file_type} file")
+        item = self.bot.filter_list_cache[f"{ctx.guild.id}"].get(file_type)
+
         try:
-            if await Filterlist.exists(type=file_type, guild=ctx.guild.id, allowed=allow):
-                await ctx.message.add_reaction("✅")
-                await ctx.reply("This extension is already whitelisted.")
-            else:
-                if await Filterlist.update_or_create(
+            # if in cache and not blacklisted, modify it
+            if item is not None and item["allow"] is False:
+                revertbool = await Filterlist.get(type=file_type, guild=ctx.guild.id, allowed=False)
+                await revertbool.revertit(allow)
+            elif item is None:  # if None, create it
+                await Filterlist.create(
                     type=file_type,
                     guild_id=ctx.guild.id,
                     allowed=allow,
                     comment=comment,
-                ):
-                    item = {"type": file_type, "guild_id": ctx.guild.id, "allowed": allow, "comment": comment}
-                    self.bot.insert_item_into_filter_list_cache(item)
-                    await ctx.message.add_reaction("✅")
-                    await ctx.reply(f"File `{file_type}` whitelisted.")
-                else:
-                    await ctx.message.add_reaction("❌")
-                    log.debug(
-                        f"{ctx.author} tried to add filetype to whitelist, but update_or_create() returned False. "
-                    )
-        except OperationalError:
+                )
+            else:  # if already whitelisted, pass
+                pass
+
+            item = {"type": file_type, "guild_id": ctx.guild.id, "allowed": allow, "comment": comment}
+            self.bot.insert_item_into_filter_list_cache(item)
+            await ctx.message.add_reaction("✅")
+            await ctx.reply(f"File `{file_type}` whitelisted.")
+
+        except Exception:
             await ctx.message.add_reaction("❌")
             log.debug(f"{ctx.author} tried to add filetype to whitelist, but tortoise returned a operational error. ")
             raise BadArgument(f"Unable to add the {file_type} to the whitelist. " "Check args and variables")
@@ -84,12 +87,12 @@ class Filters(Cog):
             file_type = f".{file_type}"
 
         # Find the file in the cache
-        log.trace(f"Trying to blacklist the {file_type}")
+        log.trace(f"Trying to blacklist the {file_type} file")
         item = self.bot.filter_list_cache[f"{ctx.guild.id}"].get(file_type)
 
         try:
             # if in cache and not blacklisted, modify it
-            if item is not None and item["allow"]:
+            if item is not None and item["allow"] is True:
                 revertbool = await Filterlist.get(type=file_type, guild=ctx.guild.id, allowed=True)
                 await revertbool.revertit(allow)
 
@@ -124,24 +127,25 @@ class Filters(Cog):
             self.synced_guilds.append(ctx.guild.id)
 
         # Return only files that match the passed 'allowed: bool'
-        result = [k for k, v in self.bot.filter_list_cache[f"{ctx.guild.id}"].items() if v["allow"] == allowed]
+        result = {k: v for k, v in self.bot.filter_list_cache[f"{ctx.guild.id}"].items() if v["allow"] == allowed}
 
         # Build a list of lines we want to show in the paginator
+        # .items() to get values from keys if needed, since results if a dict
         lines = []
-        for content, metadata in result:
-            line = f"• `{content}`"
+        for file, details in result.items():
+            line = f"• `{file}`"
 
-            if comment := metadata.get("comment"):
-                line += f" - {comment}"
+            if comment := details.get("comment"):
+                line += f" - {details}"
 
             lines.append(line)
         lines = sorted(lines)
 
         # Build the embed, change title and color based on passed 'allowed: bool'
         if allowed is False:
-            embed = discord.Embed(title=f"{ctx.guild} latest Blacklist", colour=Colours.error)
+            embed = discord.Embed(title=f"{ctx.guild}'s latest blacklist", colour=Colours.error)
         else:
-            embed = discord.Embed(title=f"{ctx.guild} latest Whitelist", colour=Colours.blue)
+            embed = discord.Embed(title=f"{ctx.guild} latest whitelist", colour=Colours.blue)
 
         log.trace(f"Trying to list {len(result)} items from the {ctx.guild} Filterlist")
 
