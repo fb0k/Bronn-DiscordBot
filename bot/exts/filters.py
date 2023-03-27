@@ -90,23 +90,17 @@ class Filters(Cog):
             if item is not None and item["allow"]:
                 revertbool = await Filterlist.get(type=file_type, guild=ctx.guild.id, allowed=True)
                 await revertbool.revertit(allow)
-            # if await Filterlist.exists(type=file_type, guild=ctx.guild.id, allowed=allow):
-            # await ctx.message.add_reaction("✅")
-            # await ctx.reply(f"{file_type} extension is now blacklisted.")
+
             elif item is None:
-                item = await Filterlist.create(
+                await Filterlist.create(
                     type=file_type,
                     guild_id=ctx.guild.id,
                     allowed=allow,
                     comment=comment,
                 )
-                # revertbool = (await Filterlist.get(type=file_type, guild=ctx.guild.id, allowed=True))
-                # revertbool.update(field_name="allowed", guild_id=ctx.guild.id, value=allow)
-                # await revertbool.revertit(allow)
             else:
-                # await ctx.reply(f"File `{file_type}` already blacklisted.")
                 pass
-                # del self.bot.filter_list_cache[f"{file_type}.{allowed}"][id]
+
             item = {"type": file_type, "guild_id": ctx.guild.id, "allowed": allow, "comment": comment}
             self.bot.insert_item_into_filter_list_cache(item)
             await ctx.message.add_reaction("✅")
@@ -120,21 +114,17 @@ class Filters(Cog):
 
     @command(name="filterlist", aliases=("filelist", "fl", "fetch"))
     async def _list_all_data(self, ctx: Context, allowed: bool) -> None:
-        """Paginate and display all items in a filterlist."""
+        """Paginate and display all items in the filterlist."""
 
         if ctx.guild.id not in self.synced_guilds:
             await self.bot.cache_filter_list_data(ctx)
             self.synced_guilds.append(ctx.guild.id)
 
-        # await self.bot.cache_filter_list_data()
+        # Return only files that match the passed 'allowed: bool'
         result = [k for k, v in self.bot.filter_list_cache[f"{ctx.guild.id}"].items() if v["allow"] == allowed]
-        # results2 = {k for k, v in result if v[2] == allowed}
-        # result = self.bot.filter_list_cache[f"{ctx.guild.id}.{allowed}"]
-        # guild = ctx.guild.id
-        # result = await Filterlist.filter(guild_id=guild)
+
         # Build a list of lines we want to show in the paginator
         lines = []
-        # for content, metadata in result.items():
         for content, metadata in result:
             line = f"• `{content}`"
 
@@ -144,7 +134,7 @@ class Filters(Cog):
             lines.append(line)
         lines = sorted(lines)
 
-        # Build the embed
+        # Build the embed, change title and color based on passed 'allowed: bool'
         if allowed is False:
             embed = discord.Embed(title=f"{ctx.guild} latest Blacklist", colour=Colours.error)
         else:
@@ -161,7 +151,7 @@ class Filters(Cog):
 
     @command(name="synclist", aliases=("sl",))
     async def _sync_data(self, ctx: Context) -> None:
-        """Syncs the filterlists with the API."""
+        """Syncs the filterlists with the database."""
         try:
             log.trace("Attempting to sync FilterList cache with data from the Database.")
             await self.bot.cache_filter_list_data(ctx)
