@@ -12,6 +12,8 @@ DELETION_MESSAGE = "{user}, looks like you posted a blocked url. Therefore, your
 
 
 class Antiphishing(discord.Cog):
+    """Message listener, check and removes malicious links in real-time"""
+
     def __init__(self, bot: Bot) -> None:
         self.bot = bot
 
