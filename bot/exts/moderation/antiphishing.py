@@ -1,10 +1,12 @@
 from discord.ext import commands
 import discord
 from database.models import Guild
-from discord.ext.commands import Bot, BucketType, Cooldown, CooldownMapping
-import re
+from discord.ext.commands import Bot
 from converters import is_scam_link, is_valid_url
 import constants
+from log import get_logger
+
+log = get_logger(__name__)
 
 DELETION_MESSAGE = "{user}, looks like you posted a blocked url. Therefore, your " "message has been removed."
 
@@ -15,10 +17,10 @@ class Antiphishing(discord.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
-        # guild: Guild = message.guild.id
+        guild: Guild = await Guild.from_id(message.guild.id)
 
-        # if guild.is_bot_blacklisted:
-        #     return
+        if guild.is_bot_blacklisted:
+            return
 
         if not message.guild:
             return
@@ -32,7 +34,7 @@ class Antiphishing(discord.Cog):
                 await message.delete()
                 await message.channel.send(DELETION_MESSAGE.format(user=message.author.mention))
             else:
-                pass
+                return
 
 
 def setup(bot) -> None:
