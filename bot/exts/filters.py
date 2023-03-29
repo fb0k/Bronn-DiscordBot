@@ -128,10 +128,10 @@ class Filters(Cog):
         await self.check_guildcache(ctx)
 
         # Return only files that match the passed 'allowed: bool'
+        # .items() to get 'allow' values , since results is a dict
         result = {k: v for k, v in self.bot.filter_list_cache[f"{ctx.guild.id}"].items() if v["allow"] == allowed}
 
         # Build a list of lines we want to show in the paginator
-        # .items() to get values from keys if needed, since results if a dict
         lines = []
         for file, details in result.items():
             line = f"• `{file}`"

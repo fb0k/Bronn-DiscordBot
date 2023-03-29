@@ -1,14 +1,14 @@
 from discord.ext import commands
 import discord
 from database.models import Guild
-from discord.ext.commands import Bot
+from discord.ext.commands import Bot, Cog
 from converters import is_scam_link, is_valid_url
 import constants
 from log import get_logger
 
 log = get_logger(__name__)
 
-DELETION_MESSAGE = "{user}, looks like you posted a blocked url. Therefore, your " "message has been removed."
+DELETION_MESSAGE = "{user}, looks like you posted a blocked url. Therefore, your message has been removed."
 
 
 class Antiphishing(discord.Cog):
@@ -17,7 +17,7 @@ class Antiphishing(discord.Cog):
     def __init__(self, bot: Bot) -> None:
         self.bot = bot
 
-    @commands.Cog.listener()
+    @Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
         guild: Guild = await Guild.from_id(message.guild.id)
 
