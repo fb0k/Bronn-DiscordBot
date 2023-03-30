@@ -50,6 +50,7 @@ class Bot(commands.Bot):
         if not development_mode_passed:
             raise ValueError("__init__ expects development_mode to be provided, got None")
         self.filter_list_cache = defaultdict(dict)
+        self.guilds_info_cache = defaultdict(dict)
         self.session: ClientSession = aiohttp.ClientSession()
         self.bot_owners = constants.Bot.owners_ids
         self.development_mode: str = development_mode
@@ -141,6 +142,7 @@ class Bot(commands.Bot):
         await Tortoise.generate_schemas()
         self.status.start()
         log.info(f"Signed into Discord as {self.user} (ID: {self.user.id})\n")
+        await self.cache_guilds_data()
 
     # async def on_error(self, event: str, *args, **kwargs) -> None:
     #     """Log errors raised in event listeners rather than printing them to stderr."""
@@ -155,7 +157,7 @@ class Bot(commands.Bot):
     def _start(self) -> None:
         self.run(constants.Bot.token, reconnect=True)
 
-    def insert_item_into_filter_list_cache(self, item: dict[str, str]) -> None:
+    def insert_item_into_filter_list_cache(self, item: dict) -> None:
         """Add an item to the bots filter_list_cache."""
         file = item["type"]
         allow = item["allowed"]
@@ -177,6 +179,25 @@ class Bot(commands.Bot):
 
         for item in result:
             self.insert_item_into_filter_list_cache(item)
+
+    def append_to_guilds_cache(self, guild_id: int, item: dict) -> None:
+        """Add an item to the bots guilds_cache."""
+
+        self.guilds_info_cache[f'{guild_id}'] = {
+            "id": item["discord_id"],
+            "blacklisted": item["is_bot_blacklisted"],
+            "automod": item["automod"],
+            "automod_log": item["automod_log"],
+            "message_log": item["message_log"],
+            "mod_log": item["mod_log"],
+        }
+
+    async def cache_guilds_data(self) -> None:
+        """Cache guild ids, logs channel and blacklisted guilds on the database."""
+        fullcache = await Guild.fetch_to_dict()
+
+        for id, item in fullcache.items():
+            self.append_to_guilds_cache(id, item)
 
 
 bot: Bot = Bot(development_mode="development")
