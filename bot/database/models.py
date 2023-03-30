@@ -5,6 +5,7 @@ from tortoise import fields
 from tortoise.expressions import F
 from tortoise.models import Model
 
+
 # from tortoise.contrib.postgres.fields import ArrayField
 
 
@@ -121,7 +122,6 @@ class Guild(Model):
     automod_log = fields.BigIntField(default=0)
     message_log = fields.BigIntField(default=0)
     mod_log = fields.BigIntField(default=0)
-    # mod_channels = ArrayField(element_type=int)
     suggestions = fields.BigIntField(default=0)
 
     changelog_enabled = fields.BooleanField(default=False)
@@ -137,9 +137,6 @@ class Guild(Model):
     # Premium
     is_premium = fields.BooleanField(default=False)
 
-    # Some Fields When Doing Global Checks (soon™)
-    blacklisted_channels = fields.BigIntField(null=True)
-
     @classmethod
     async def from_id(cls, guild_id):
         # TODO: Implement caching in here or override get method
@@ -152,6 +149,17 @@ class Guild(Model):
     @classmethod
     async def from_context(cls, ctx: Context):
         return await cls.from_id(ctx.guild.id)
+
+    @classmethod
+    async def fetch_to_dict(self):
+        d = {}
+        objs = await Guild.all().values(
+            "discord_id", "is_bot_blacklisted", "automod", "automod_log", "message_log", "mod_log"
+        )
+        for obj in objs:
+            d[obj["discord_id"]] = obj
+
+        return d
 
 
 class GuildEvent(Model):
