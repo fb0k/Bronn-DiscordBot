@@ -144,16 +144,6 @@ class Bot(commands.Bot):
         log.info(f"Signed into Discord as {self.user} (ID: {self.user.id})\n")
         await self.cache_guilds_data()
 
-    # async def on_error(self, event: str, *args, **kwargs) -> None:
-    #     """Log errors raised in event listeners rather than printing them to stderr."""
-
-    #     with push_scope() as scope:
-    #         scope.set_tag("event", event)
-    #         scope.set_extra("args", args)
-    #         scope.set_extra("kwargs", kwargs)
-
-    #         log.exception(f"Unhandled exception in {event}.")
-
     def _start(self) -> None:
         self.run(constants.Bot.token, reconnect=True)
 
@@ -165,7 +155,6 @@ class Bot(commands.Bot):
 
         self.filter_list_cache[f"{guild}"][file] = {
             "file": item["type"],
-            # "id": item["id"],
             "guild_id": guild,
             "allow": allow,
             "comment": item["comment"],
@@ -186,10 +175,11 @@ class Bot(commands.Bot):
         self.guilds_info_cache[f"{guild_id}"] = {
             "id": item["discord_id"],
             "blacklisted": item["is_bot_blacklisted"],
-            "automod": item["automod"],
+            "automod": item["is_automod"],
             "automod_log": item["automod_log"],
             "message_log": item["message_log"],
             "mod_log": item["mod_log"],
+            "logging": item["is_logging"],
         }
 
     async def cache_guilds_data(self) -> None:
