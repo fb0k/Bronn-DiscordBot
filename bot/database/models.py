@@ -6,7 +6,7 @@ from tortoise.expressions import F
 from tortoise.models import Model
 
 
-# from tortoise.contrib.postgres.fields import ArrayField
+from tortoise.contrib.postgres.fields import ArrayField
 
 
 # aioredis.util._converters[bool] = lambda x: b"1" if x else b"0"
@@ -118,7 +118,8 @@ class Guild(Model):
     language = fields.TextField(default="en")
     prefix = fields.TextField(default=".")
     # timezone = fields.TextField(default="UTC")
-    automod = fields.BooleanField(default=False)
+    is_logging = fields.BooleanField(default=False)
+    is_automod = fields.BooleanField(default=False)
     automod_log = fields.BigIntField(default=0)
     message_log = fields.BigIntField(default=0)
     mod_log = fields.BigIntField(default=0)
@@ -169,6 +170,16 @@ class GuildEvent(Model):
     new = fields.TextField(default=None, unique=False)
     timestamp = fields.DatetimeField(auto_now_add=True)
     guild = fields.ForeignKeyField("B0F.Guild", related_name="GuildEvent")
+
+
+class Roles(Model):
+    id = fields.BigIntField(pk=True)
+    name = fields.CharField(max_length=30)
+    role_id = fields.BigIntField()
+    is_mod = fields.BooleanField(default=False)
+    comment = fields.TextField(default=None, unique=False, null=True)
+    guild = fields.ForeignKeyField("B0F.Guild", related_name="Roles")
+
 
 
 class Invite(Model):
@@ -278,6 +289,36 @@ class Filterlist(Model):
         await self.save(update_fields=["allowed"])
         await self.refresh_from_db(fields=["allowed"])
         return self.allowed
+
+
+class Filters_test(Model):
+    guildid = fields.BigIntField(pk=True)
+    whitelist = ArrayField(element_type="text")
+    blacklist = ArrayField(element_type="text")
+    # guild = fields.ForeignKeyField("B0F.Guild", related_name="Filterstest")
+
+    @classmethod
+    async def allowit(self, file: str):
+        # self.blacklist -= file
+        self.update_or_create("whitelist": f'{file}')
+        await self.save(update_fields=["whitelist"])
+        await self.refresh_from_db(fields=["whitelist"])
+        return self.whitelist
+
+    @classmethod
+    async def blockit(self, file: str):
+        self.whitelist -= file
+        self.blacklist += file
+        await self.save(update_fields=["blacklist", "whitelist"])
+        await self.refresh_from_db(fields=["blacklist", "whitelist"])
+        return self.blacklist
+
+    @classmethod
+    async def updatelist(self, file: str, field_name: ArrayField):
+        self.field_name += file
+        await self.save(update_fields=[f"{field_name}"])
+        await self.refresh_from_db(fields=[f"{field_name}"])
+        return self.field_name
 
 
 class Keys(Model):
