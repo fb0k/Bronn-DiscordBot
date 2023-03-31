@@ -183,7 +183,7 @@ class Bot(commands.Bot):
     def append_to_guilds_cache(self, guild_id: int, item: dict) -> None:
         """Add an item to the bots guilds_cache."""
 
-        self.guilds_info_cache[f'{guild_id}'] = {
+        self.guilds_info_cache[f"{guild_id}"] = {
             "id": item["discord_id"],
             "blacklisted": item["is_bot_blacklisted"],
             "automod": item["automod"],
