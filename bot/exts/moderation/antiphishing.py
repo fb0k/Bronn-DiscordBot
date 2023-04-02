@@ -5,6 +5,7 @@ from discord.ext.commands import Bot, Cog
 from converters import is_scam_link, is_valid_url
 import constants
 from log import get_logger
+import typing as t
 
 log = get_logger(__name__)
 
@@ -18,16 +19,16 @@ class Antiphishing(discord.Cog):
         self.bot = bot
 
     @Cog.listener()
-    async def on_message(self, message: discord.Message) -> None:
+    async def on_message(self, message: t.Union[discord.Message, discord.Embed]) -> None:
+        if message.author.bot:
+            return
+
         guild: Guild = await Guild.from_id(message.guild.id)
 
         if guild.is_bot_blacklisted:
             return
 
         if not message.guild:
-            return
-
-        if message.author.bot:
             return
 
         link = message.content
