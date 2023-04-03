@@ -81,7 +81,20 @@ class SetLogs(discord.ui.View):
             timestamp=discord.utils.utcnow(),
         )
 
-        await interaction.response.send_message(embed=embed, delete_after=3, view=None, ephemeral=True)
+        await interaction.response.send_message(embed=embed, delete_after=30, view=None, ephemeral=True)
+
+
+class SetLogsButton(discord.ui.View):
+    @discord.ui.button(label="Manage", style=discord.ButtonStyle.primary, emoji="😎")
+    async def button_callback(self, button, interaction):
+        embed = discord.Embed(
+            title="Set method and channel to receive logs", color=0x0060FF, description=("Current logging channels:\n")
+        )
+        embed.add_field(name="Moderation", value=str(1))
+        embed.add_field(name="Message", value=str(1))
+        embed.add_field(name="Automoderation", value=str(1))
+        view = SetLogs()
+        await interaction.response.send_message(embed=embed, delete_after=30, ephemeral=True, view=view)
 
 
 class ModLog(Cog, name="ModLog"):
@@ -231,15 +244,13 @@ class ModLog(Cog, name="ModLog"):
         assert self.bot.user
         embed = discord.Embed(
             title=f"{ctx.guild}s Logging",
-            description=("Manage the server logging channels.\n" "Use the menu below to set channels."),
+            description=("View and Manage the server logging channels.\n"),
             colour=0x0060FF,
         )
         embed.set_thumbnail(url=self.bot.user.display_avatar.url)
         embed.add_field(name="Server Count", value=str(len(self.bot.guilds)))
         embed.add_field(name="User Count", value=str(len(self.bot.users)))
-        embed.add_field(name="Ping", value=f"{self.bot.latency*1000:.2f}ms")
-        view = SetLogs()
-        # view = discord.ui.View(SetLogs(self))
+        view = SetLogsButton()
         await ctx.send(embed=embed, view=view)
 
     @commands.cooldown(1, 2, BucketType.user)
