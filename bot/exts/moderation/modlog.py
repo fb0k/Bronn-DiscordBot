@@ -43,7 +43,19 @@ def format_user(user: discord.abc.User) -> str:
 
 
 class SetLogs(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=15)  # specify the timeout here
+
     choice_cache = None
+    # def _expires_at(self) -> float | None:
+    #     if self.timeout:
+    #         return time.monotonic() + self.timeout
+
+    async def on_timeout(self):
+        await asyncio.sleep(2)
+        for child in self.children:
+            child.disabled = True
+        await self.message.delete()
 
     @discord.ui.select(
         placeholder="Choose a Action to log ",
@@ -76,12 +88,16 @@ class SetLogs(discord.ui.View):
         # guild = await Guild.filter(discord_id=interaction.guild.id)
         # await guild.update_from_dict({method: channel}).save()
         embed = discord.Embed(
-            title=f"{method} logs will be sent to {channel.mention}.",
+            title=f"{method} logging channel updated to {channel.mention}.",
             color=0x0060FF,
+            description=("Current logging channels:\n"),
             timestamp=discord.utils.utcnow(),
         )
+        embed.add_field(name="Moderation", value=str(1))
+        embed.add_field(name="Message", value=str(1))
+        embed.add_field(name="Automoderation", value=str(1))
 
-        await interaction.response.send_message(embed=embed, delete_after=30, view=None, ephemeral=True)
+        await interaction.response.edit_message(embed=embed, view=SetLogs())
 
 
 class SetLogsButton(discord.ui.View):
@@ -94,7 +110,8 @@ class SetLogsButton(discord.ui.View):
         embed.add_field(name="Message", value=str(1))
         embed.add_field(name="Automoderation", value=str(1))
         view = SetLogs()
-        await interaction.response.send_message(embed=embed, delete_after=30, ephemeral=True, view=view)
+
+        await interaction.response.send_message(embed=embed, ephemeral=True, view=view)
 
 
 class ModLog(Cog, name="ModLog"):
@@ -251,7 +268,7 @@ class ModLog(Cog, name="ModLog"):
         embed.add_field(name="Server Count", value=str(len(self.bot.guilds)))
         embed.add_field(name="User Count", value=str(len(self.bot.users)))
         view = SetLogsButton()
-        await ctx.send(embed=embed, view=view)
+        await ctx.send(embed=embed, view=view, delete_after=7)
 
     @commands.cooldown(1, 2, BucketType.user)
     @command(
