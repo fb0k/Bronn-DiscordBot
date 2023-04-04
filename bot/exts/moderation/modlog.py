@@ -84,19 +84,12 @@ class ActionSelect(discord.ui.Select):
         self.view.action_check = True
         log.error(self.view.action_check)
         log.error(self.view.channel_check)
+        self.view.timeout += 20
         if self.view.action_check and self.view.channel_check:
             await Guild.update_or_create(
                 discord_id=interaction.guild.id, defaults={logname: self.view.choice_cache["channel"].id}
             )
-            embed = discord.Embed(
-                title=f"{choice} logging channel updated to {self.view.choice_cache['channel'].mention}.",
-                color=0x0060FF,
-                description=("Current logging channels:\n"),
-                timestamp=discord.utils.utcnow(),
-            )
-            embed.add_field(name="Moderation", value=str(1))
-            embed.add_field(name="Message", value=str(1))
-            embed.add_field(name="Automoderation", value=str(1))
+            embed = setlogsembed(self.view.choice_cache)
 
             await interaction.response.edit_message(embed=embed, view=SetLogs())
         else:
@@ -116,27 +109,22 @@ class ChannelSelect(discord.ui.Select):
         channel: discord.TextChannel = self.values[0]
         self.view.choice_cache["channel"] = channel
         self.view.channel_check = True
+        self.view.timeout += 20
         if self.view.action_check and self.view.channel_check:
             await Guild.update_or_create(
                 discord_id=interaction.guild.id, defaults={self.view.choice_cache["action"]: channel.id}
             )
-            embed = discord.Embed(
-                title=f"{self.view.choice_cache['action']} logging channel updated to {channel.mention}.",
-                color=0x0060FF,
-                description=("Current logging channels:\n"),
-                timestamp=discord.utils.utcnow(),
-            )
-            embed.add_field(name="Moderation", value=str(1))
-            embed.add_field(name="Message", value=str(1))
-            embed.add_field(name="Automoderation", value=str(1))
+            embed = setlogsembed(self.view.choice_cache)
             await interaction.response.edit_message(embed=embed, view=SetLogs())
         else:
             await interaction.response.defer(ephemeral=True, invisible=True)
 
 
 class SetLogs(discord.ui.View):
-    def __init__(self):
-        super().__init__(timeout=15)
+    def __init__(
+        self,
+    ):
+        super().__init__(timeout=20)
 
         self.choice_cache = {}
         self.action_check = False
