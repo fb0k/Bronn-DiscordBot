@@ -42,62 +42,126 @@ def format_user(user: discord.abc.User) -> str:
     return f"{user.mention} (`{user.id}`)"
 
 
+def setlogsembed(choices: dict):
+    action = (
+        "Moderation"
+        if choices["action"] == "mod_log"
+        else "Messages"
+        if choices["action"] == "message_log"
+        else "Automoderation"
+    )
+    embed = discord.Embed(
+        title=f"{action} logging channel updated to {choices['channel'].mention}.",
+        color=0x0060FF,
+        description=("Current logging channels:\n"),
+        timestamp=discord.utils.utcnow(),
+    )
+    embed.add_field(name="Moderation", value=str(1))
+    embed.add_field(name="Message", value=str(1))
+    embed.add_field(name="Automoderation", value=str(1))
+
+    return embed
+
+
+class ActionSelect(discord.ui.Select):
+    def __init__(self) -> None:
+        super().__init__(
+            placeholder="Choose a Action to log ",
+            options=[
+                discord.SelectOption(
+                    label=log_name,
+                    description=log_desc,
+                )
+                for log_name, log_desc in Log_options.items()
+            ],
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        choice = self.values[0]
+        logname = "mod_log" if choice == "Moderation" else "message_log" if choice == "Messages" else "automod_log"
+        self.view.choice_cache["action"] = logname
+        log.error(self.view.choice_cache)
+        self.view.action_check = True
+        log.error(self.view.action_check)
+        log.error(self.view.channel_check)
+        if self.view.action_check and self.view.channel_check:
+            await Guild.update_or_create(
+                discord_id=interaction.guild.id, defaults={logname: self.view.choice_cache["channel"].id}
+            )
+            embed = discord.Embed(
+                title=f"{choice} logging channel updated to {self.view.choice_cache['channel'].mention}.",
+                color=0x0060FF,
+                description=("Current logging channels:\n"),
+                timestamp=discord.utils.utcnow(),
+            )
+            embed.add_field(name="Moderation", value=str(1))
+            embed.add_field(name="Message", value=str(1))
+            embed.add_field(name="Automoderation", value=str(1))
+
+            await interaction.response.edit_message(embed=embed, view=SetLogs())
+        else:
+            await interaction.response.defer(ephemeral=True, invisible=True)
+        # await interaction.response.defer(ephemeral=True, invisible=True)
+
+
+class ChannelSelect(discord.ui.Select):
+    def __init__(self) -> None:
+        super().__init__(
+            select_type=discord.ComponentType.channel_select,
+            placeholder="Choose a channel to log ",
+            channel_types=[discord.ChannelType.text],
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        channel: discord.TextChannel = self.values[0]
+        self.view.choice_cache["channel"] = channel
+        self.view.channel_check = True
+        if self.view.action_check and self.view.channel_check:
+            await Guild.update_or_create(
+                discord_id=interaction.guild.id, defaults={self.view.choice_cache["action"]: channel.id}
+            )
+            embed = discord.Embed(
+                title=f"{self.view.choice_cache['action']} logging channel updated to {channel.mention}.",
+                color=0x0060FF,
+                description=("Current logging channels:\n"),
+                timestamp=discord.utils.utcnow(),
+            )
+            embed.add_field(name="Moderation", value=str(1))
+            embed.add_field(name="Message", value=str(1))
+            embed.add_field(name="Automoderation", value=str(1))
+            await interaction.response.edit_message(embed=embed, view=SetLogs())
+        else:
+            await interaction.response.defer(ephemeral=True, invisible=True)
+
+
 class SetLogs(discord.ui.View):
     def __init__(self):
-        super().__init__(timeout=15)  # specify the timeout here
+        super().__init__(timeout=15)
 
-    choice_cache = None
+        self.choice_cache = {}
+        self.action_check = False
+        self.channel_check = False
+
+        self.add_item(ActionSelect())
+        self.add_item(ChannelSelect())
+
     # def _expires_at(self) -> float | None:
     #     if self.timeout:
     #         return time.monotonic() + self.timeout
 
     async def on_timeout(self):
-        await asyncio.sleep(2)
+        # await asyncio.sleep(2)
         for child in self.children:
             child.disabled = True
         await self.message.delete()
 
-    @discord.ui.select(
-        placeholder="Choose a Action to log ",
-        options=[
-            discord.SelectOption(
-                label=log_name,
-                description=log_desc,
-            )
-            for log_name, log_desc in Log_options.items()
-        ],
-        row=0,
-    )
-    async def action_callback(self, select1, interaction: discord.Interaction):
-        choice = select1.values[0]
-        logname = "mod_log" if choice == "Moderation" else "message_log" if choice == "Messages" else "automod_log"
-        self.choice_cache = logname
-        await interaction.response.defer(ephemeral=True, invisible=True)
 
-    @discord.ui.select(
-        select_type=discord.ComponentType.channel_select,
-        placeholder="Choose a channel to log ",
-        channel_types=[discord.ChannelType.text],
-        row=1,
-    )
-    async def channel_callback(self, select2, interaction: discord.Interaction):
-        channel: discord.TextChannel = select2.values[0]
-        method: str = self.children[0].values[0]
-        logname: str = "mod_log" if method == "Moderation" else "message_log" if method == "Messages" else "automod_log"
-        await Guild.update_or_create(discord_id=interaction.guild.id, defaults={logname: channel.id})
-        # guild = await Guild.filter(discord_id=interaction.guild.id)
-        # await guild.update_from_dict({method: channel}).save()
-        embed = discord.Embed(
-            title=f"{method} logging channel updated to {channel.mention}.",
-            color=0x0060FF,
-            description=("Current logging channels:\n"),
-            timestamp=discord.utils.utcnow(),
-        )
-        embed.add_field(name="Moderation", value=str(1))
-        embed.add_field(name="Message", value=str(1))
-        embed.add_field(name="Automoderation", value=str(1))
-
-        await interaction.response.edit_message(embed=embed, view=SetLogs())
+# async def interaction_check(self, interaction: discord.Interaction):
+#         if interaction.user != self.ctx.author:
+#             embed = Embed(description=f"Sorry, but this interaction can only be used by {self.ctx.author.name}.")
+#             await interaction.channel.send(embed=embed, delete_after=60)
+#             await interaction.response.defer()
+#             return True
 
 
 class SetLogsButton(discord.ui.View):
