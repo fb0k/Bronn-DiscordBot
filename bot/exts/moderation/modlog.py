@@ -77,13 +77,15 @@ class ActionSelect(discord.ui.Select):
         )
 
     async def callback(self, interaction: discord.Interaction):
-        choice = self.values[0]
-        logname = "mod_log" if choice == "Moderation" else "message_log" if choice == "Messages" else "automod_log"
+        logname = (
+            "mod_log"
+            if self.values[0] == "Moderation"
+            else "message_log"
+            if self.values[0] == "Messages"
+            else "automod_log"
+        )
         self.view.choice_cache["action"] = logname
-        log.error(self.view.choice_cache)
         self.view.action_check = True
-        log.error(self.view.action_check)
-        log.error(self.view.channel_check)
         self.view.timeout += 20
         if self.view.action_check and self.view.channel_check:
             await Guild.update_or_create(
@@ -94,7 +96,6 @@ class ActionSelect(discord.ui.Select):
             await interaction.response.edit_message(embed=embed, view=SetLogs())
         else:
             await interaction.response.defer(ephemeral=True, invisible=True)
-        # await interaction.response.defer(ephemeral=True, invisible=True)
 
 
 class ChannelSelect(discord.ui.Select):
@@ -106,13 +107,13 @@ class ChannelSelect(discord.ui.Select):
         )
 
     async def callback(self, interaction: discord.Interaction):
-        channel: discord.TextChannel = self.values[0]
-        self.view.choice_cache["channel"] = channel
+        self.view.choice_cache["channel"] = self.values[0]
         self.view.channel_check = True
         self.view.timeout += 20
         if self.view.action_check and self.view.channel_check:
             await Guild.update_or_create(
-                discord_id=interaction.guild.id, defaults={self.view.choice_cache["action"]: channel.id}
+                discord_id=interaction.guild.id,
+                defaults={self.view.choice_cache["action"]: self.view.choice_cache["channel"].id},
             )
             embed = setlogsembed(self.view.choice_cache)
             await interaction.response.edit_message(embed=embed, view=SetLogs())
@@ -133,23 +134,10 @@ class SetLogs(discord.ui.View):
         self.add_item(ActionSelect())
         self.add_item(ChannelSelect())
 
-    # def _expires_at(self) -> float | None:
-    #     if self.timeout:
-    #         return time.monotonic() + self.timeout
-
     async def on_timeout(self):
-        # await asyncio.sleep(2)
         for child in self.children:
             child.disabled = True
         await self.message.delete()
-
-
-# async def interaction_check(self, interaction: discord.Interaction):
-#         if interaction.user != self.ctx.author:
-#             embed = Embed(description=f"Sorry, but this interaction can only be used by {self.ctx.author.name}.")
-#             await interaction.channel.send(embed=embed, delete_after=60)
-#             await interaction.response.defer()
-#             return True
 
 
 class SetLogsButton(discord.ui.View):
