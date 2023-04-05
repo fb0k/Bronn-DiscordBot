@@ -155,7 +155,7 @@ class Guild(Model):
     async def fetch_to_dict(self):
         d = {}
         objs = await Guild.all().values(
-            "discord_id", "is_bot_blacklisted", "automod", "automod_log", "message_log", "mod_log"
+            "discord_id", "is_bot_blacklisted", "is_automod", "automod_log", "message_log", "mod_log", "is_logging"
         )
         for obj in objs:
             d[obj["discord_id"]] = obj
@@ -179,7 +179,6 @@ class Roles(Model):
     is_mod = fields.BooleanField(default=False)
     comment = fields.TextField(default=None, unique=False, null=True)
     guild = fields.ForeignKeyField("B0F.Guild", related_name="Roles")
-
 
 
 class Invite(Model):
@@ -293,27 +292,32 @@ class Filterlist(Model):
 
 class Filters_test(Model):
     guildid = fields.BigIntField(pk=True)
-    whitelist = ArrayField(element_type="text")
-    blacklist = ArrayField(element_type="text")
+    whitelist = fields.TextField(default=None, null=True)
+    blacklist = fields.TextField(default=None, null=True)
     # guild = fields.ForeignKeyField("B0F.Guild", related_name="Filterstest")
 
-    @classmethod
     async def allowit(self, file: str):
-        # self.blacklist -= file
-        self.update_or_create("whitelist": f'{file}')
-        await self.save(update_fields=["whitelist"])
-        await self.refresh_from_db(fields=["whitelist"])
+        self.blacklist = self.blacklist.replace(file, "")
+        self.whitelist = (
+            f"{self.whitelist}{file}".replace("None", "")
+            if self.whitelist.find(f"{file}") is -1
+            else f"{self.whitelist}".replace("None", "")
+        )
+        await self.save(update_fields=["whitelist", "blacklist"])
+        await self.refresh_from_db(fields=["whitelist", "blacklist"])
         return self.whitelist
 
-    @classmethod
     async def blockit(self, file: str):
-        self.whitelist -= file
-        self.blacklist += file
-        await self.save(update_fields=["blacklist", "whitelist"])
-        await self.refresh_from_db(fields=["blacklist", "whitelist"])
+        self.whitelist = self.whitelist.replace(file, "")
+        self.blacklist = (
+            f"{self.blacklist}{file}".replace("None", "")
+            if self.blacklist.find(f"{file}") is -1
+            else f"{self.blacklist}".replace("None", "")
+        )
+        await self.save(update_fields=["whitelist", "blacklist"])
+        await self.refresh_from_db(fields=["whitelist", "blacklist"])
         return self.blacklist
 
-    @classmethod
     async def updatelist(self, file: str, field_name: ArrayField):
         self.field_name += file
         await self.save(update_fields=[f"{field_name}"])
