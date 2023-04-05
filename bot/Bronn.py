@@ -120,7 +120,7 @@ class Bot(commands.Bot):
                     log.error(return_error())
         result = (tuple(loaded_extensions), tuple(failed_extensions))
         return result
-
+    
     @tasks.loop(seconds=10)
     async def status(self) -> None:
         """Cycles through all status every 10 seconds"""
