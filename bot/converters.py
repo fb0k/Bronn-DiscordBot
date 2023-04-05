@@ -33,6 +33,11 @@ Timestamp = Union[
 _Precision = Literal["years", "months", "days", "hours", "minutes", "seconds"]
 
 
+def format_user(user: discord.abc.User) -> str:
+    """Return a string for `user` which has their mention and ID."""
+    return f"{user.mention} (`{user.id}`)"
+
+
 async def is_scam_link(link: str) -> str:
     """Checks if given url is a phishing or scam website"""
     async with aiohttp.ClientSession() as session:
