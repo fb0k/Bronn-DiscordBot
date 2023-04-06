@@ -11,6 +11,7 @@ Log_options = {
 
 
 async def setlogsembed(choices: dict, view: discord.ui.View):
+
     guild = await Guild.get(discord_id=view.message.guild.id)
     # await Guild.filter()
     action = (
@@ -92,6 +93,8 @@ class ChannelSelect(discord.ui.Select):
 
 
 class SetLogs(discord.ui.View):
+    """Setlogs command view, with ActionSelect and ChannelSelect"""
+
     def __init__(self, bot: Bot):
         super().__init__(timeout=20)
         self.bot = bot
@@ -109,6 +112,8 @@ class SetLogs(discord.ui.View):
 
 
 class SetLogsButton(discord.ui.View):
+    """Button to call SetLogs view with epheram property"""
+
     @discord.ui.button(label="Manage", style=discord.ButtonStyle.primary, emoji="😎")
     async def button_callback(self, button, interaction):
         embed = discord.Embed(
