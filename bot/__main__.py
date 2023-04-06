@@ -1,9 +1,10 @@
-from Bronn import bot
+from log import get_logger, setup_sentry, setup
 import sys
-from log import get_logger, setup_sentry
 
-
+setup()
 setup_sentry()
+
+from Bronn import bot
 
 
 if __name__ == "__main__":
