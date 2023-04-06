@@ -41,34 +41,6 @@ class ModLog(Cog, name="ModLog"):
 
         self._cached_edits = []
 
-    async def upload_log(
-        self, messages: t.Iterable[discord.Message], actor_id: int, attachments: t.Iterable[t.List[str]] = None
-    ) -> str:
-        """Upload message logs to the database and return a URL to a page for viewing the logs."""
-        if attachments is None:
-            attachments = []
-
-        response = await self.bot.api_client.post(
-            "bot/deleted-messages",
-            json={
-                "actor": actor_id,
-                "creation": datetime.now(timezone.utc).isoformat(),
-                "deletedmessage_set": [
-                    {
-                        "id": message.id,
-                        "author": message.author.id,
-                        "channel_id": message.channel.id,
-                        "content": message.content.replace("\0", ""),  # Null chars cause 400.
-                        "embeds": [embed.to_dict() for embed in message.embeds],
-                        "attachments": attachment,
-                    }
-                    for message, attachment in zip_longest(messages, attachments, fillvalue=[])
-                ],
-            },
-        )
-
-        return  # f"{URLs.site_logs_view}/{response['id']}"
-
     async def send_log_message(
         self,
         icon_url: t.Optional[str],
@@ -792,12 +764,6 @@ class ModLog(Cog, name="ModLog"):
         # Shorten the message content if necessary
         content = message.clean_content
         remaining_chars = 4090 - len(response)
-
-        if len(content) > remaining_chars:
-            botlog_url = await self.upload_log(messages=[message], actor_id=message.author.id)
-            ending = f"\n\nMessage truncated, [full message here]({botlog_url})."
-            truncation_point = remaining_chars - len(ending)
-            content = f"{content[:truncation_point]}...{ending}"
 
         response += f"{content}"
 
