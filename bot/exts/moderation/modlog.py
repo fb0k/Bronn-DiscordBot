@@ -3,7 +3,6 @@ import difflib
 import itertools
 import typing as t
 from datetime import datetime, timezone
-from itertools import zip_longest
 import converters
 import discord
 from dateutil.relativedelta import relativedelta
@@ -18,7 +17,6 @@ from Bronn import Bot
 from database.models import Guild, Roles
 from discord import AuditLogAction, AuditLogEntry
 from discord.ext import commands
-from tortoise.exceptions import DoesNotExist, IntegrityError
 from utils.views import SetLogs, SetLogsButton
 from converters import format_user
 
@@ -763,7 +761,6 @@ class ModLog(Cog, name="ModLog"):
 
         # Shorten the message content if necessary
         content = message.clean_content
-        remaining_chars = 4090 - len(response)
 
         response += f"{content}"
 
