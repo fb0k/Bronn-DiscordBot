@@ -1,4 +1,0 @@
-import log
-
-
-log.setup()
