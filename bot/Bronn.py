@@ -26,7 +26,6 @@ import constants
 from log import get_logger, return_error
 from database import tortoise_config
 from database.models import Filterlist
-import __init__
 
 
 os.system("cls" if sys.platform == "win32" else "clear")
@@ -112,15 +111,15 @@ class Bot(commands.Bot):
                 failed_extensions.add(file)
                 log.error(f"{file.upper()}")
                 if not reraise_exceptions:
-                    traceback.print_exception(type(e), e, e.__traceback__)
-                    print(return_error())
+                    # traceback.print_exception(type(e), e, e.__traceback__)
+                    log.error(return_error())
 
                 else:
                     # raise e
                     log.error(return_error())
         result = (tuple(loaded_extensions), tuple(failed_extensions))
         return result
-    
+
     @tasks.loop(seconds=10)
     async def status(self) -> None:
         """Cycles through all status every 10 seconds"""
