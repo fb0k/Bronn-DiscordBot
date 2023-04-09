@@ -1,3 +1,9 @@
+"""
+This is the bot subclass file.
+
+It contains all the subclass specific methods and attributes.
+such as cachelists, activities iterator and load_extensions().
+"""
 import inspect
 import itertools
 import os
@@ -33,12 +39,14 @@ log = get_logger("bot")
 
 
 class Bot(commands.Bot):
+    """Subclass of Pycord commands.Bot with custom methods and attributes."""
+
     on_ready_fired: bool = False
     cache: Dict[str, Dict] = {"afk": {}, "example_list": {}}
 
     def __init__(
         self,
-        development_mode: str = True,
+        development_mode: bool = True,
         extensions_dir: str = "exts",
         *args,
         **kwargs,
@@ -48,11 +56,11 @@ class Bot(commands.Bot):
 
         if not development_mode_passed:
             raise ValueError("__init__ expects development_mode to be provided, got None")
-        self.filter_list_cache = defaultdict(dict)
-        self.guilds_info_cache = defaultdict(dict)
+        self.filter_list_cache: dict = defaultdict(dict)
+        self.guilds_info_cache: dict = defaultdict(dict)
         self.session: ClientSession = aiohttp.ClientSession()
         self.bot_owners = constants.Bot.owners_ids
-        self.development_mode: str = development_mode
+        self.development_mode: bool = development_mode
         self.redis_path = constants.Redis.uri
         self.command_prefix = commands.when_mentioned_or(constants.Bot.prefix)
 
@@ -122,7 +130,7 @@ class Bot(commands.Bot):
 
     @tasks.loop(seconds=10)
     async def status(self) -> None:
-        """Cycles through all status every 10 seconds"""
+        """Cycles through all status every 10 seconds."""
         new_activity = next(self.activities)
         # The commands one is callable so the command counts actually change
         if callable(new_activity):
@@ -132,7 +140,7 @@ class Bot(commands.Bot):
 
     @status.before_loop
     async def before_status(self) -> None:
-        """Ensures the bot is fully ready before starting the task"""
+        """Ensures the bot is fully ready before starting the task."""
         await self.wait_until_ready()
 
     async def on_ready(self) -> None:
