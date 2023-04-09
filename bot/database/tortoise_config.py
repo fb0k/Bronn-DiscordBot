@@ -18,5 +18,16 @@ TORTOISE_CONFIG: dict[str, Any] = {
         }
     },
     "use_tz": config["DATABASE_USE_TZ"],
-    
+}
+
+
+DBTEST_CONFIG: dict[str, Any] = {
+    "connections": {"default": config["DATABASE_URI_TEST"]},
+    "apps": {
+        config["TORTOISE_APP_NAME"]: {
+            "models": [config["DATABASE_MODELS_TEST"], "aerich.models"],
+            "default_connection": "default",
+        }
+    },
+    "use_tz": config["DATABASE_USE_TZ"],
 }
