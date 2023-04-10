@@ -4,7 +4,7 @@ This is the bot subclass file.
 It contains all the subclass specific methods and attributes.
 such as cachelists, activities iterator and load_extensions().
 """
-import inspect
+
 import itertools
 import os
 import sys
@@ -16,11 +16,6 @@ import aiohttp
 import discord
 from aiohttp import ClientSession
 from discord import Embed, Intents, Message
-from discord.errors import (
-    ExtensionAlreadyLoaded,
-    ExtensionNotFound,
-    ExtensionNotLoaded,
-)
 from discord.ext import commands, tasks
 from discord.flags import MemberCacheFlags
 from discord.mentions import AllowedMentions
@@ -100,7 +95,6 @@ class Bot(commands.Bot):
         self.load_extensions()
 
     def load_extensions(self, reraise_exceptions: bool = False) -> Tuple[Tuple[str], Tuple[str]]:
-
         bot_dir = os.path.dirname(__file__)
         loaded_extensions = set()
         failed_extensions = set()
@@ -200,44 +194,6 @@ class Bot(commands.Bot):
 bot: Bot = Bot(development_mode="development")
 
 
-@bot.command()
-@commands.is_owner()
-async def load(ctx: commands.Context, *, extentions: str) -> None:
-    """Loads an extension, owners only"""
-
-    if bot.development_mode != "development":
-        embed: Embed = discord.Embed(
-            color=constants.Colours.soft_red,
-            description=f"{constants.Emojis.error} `bot.development_mode` set to `{bot.development_mode}`,"
-            " commands such as `load`, `reload` and `unload` require `bot.development_mode` to be **development**",
-        )
-        await ctx.send(embed=embed)
-        return
-
-    if extentions is None:
-        embed: Embed = discord.Embed(
-            color=constants.Colours.soft_red,
-            description=f"{constants.Emojis.error} `extention` argument missing",
-        )
-        await ctx.send(embed=embed)
-        return
-
-    loaded_extentions = []
-
-    for extention in extentions.split():
-        bot.load_extension(f"cogs.{extention}")
-        loaded_extentions.append(extention)
-
-    embed: Embed = discord.Embed(
-        color=constants.Colours.bright_green,
-        description=f"{', '.join(extention)} Are Now Loaded!",
-    )
-
-    message: Message = await ctx.send(embed=embed)
-
-    await message.add_reaction(constants.Emojis.sucess)
-
-
 @bot.event
 async def on_guild_join(guild: discord.Guild) -> None:
     try:
@@ -252,7 +208,6 @@ async def on_guild_join(guild: discord.Guild) -> None:
 
 @bot.check
 async def is_bot_on_maintenance_mode(ctx: commands.Context) -> bool:
-
     maintenance_mode = False
     bot_name = constants.Bot.name
 
@@ -283,158 +238,3 @@ async def is_guild_blacklisted(ctx: commands.Context) -> bool:
         return False
     else:
         return True
-
-
-@bot.command(aliases=["where", "find"])
-@commands.is_owner()
-async def which(ctx: commands.Context, *, command_name: str) -> None:
-    """Finds the cog a command is part of"""
-    command = bot.get_command(command_name)
-    if command is None:
-        embed: Embed = discord.Embed(
-            description=f"{constants.Emojis.error} `{command_name}` **does not exist.**",
-            color=constants.Colours.soft_red,
-        )
-    else:
-        inner_command = command.callback
-        command_defined_on: int = inspect.getsourcelines(inner_command)[1]
-        full_command_signature: str = f"`async def {inner_command.__name__}{inspect.signature(inner_command)}`"
-        if type(command) is commands.Command and not command.parent:
-            command_type: Literal["`Standalone command`"] = "`Standalone command`"
-        elif type(command) is commands.Group:
-            command_type: Literal["`Standalone command`"] = "`Command group`"
-        else:
-            command_type: Literal["`Standalone command`"] = f"Subcommand of `{command.parent.qualified_name}`"
-        embed: Embed = discord.Embed(title="Target Acquired \U0001F3AF", color=constants.Colours.bright_green)
-        embed.add_field(
-            name="Part of Extension",
-            value=f"`{command.cog.qualified_name}`" if command.cog is not None else "`Root Module`",
-            inline=False,
-        )
-        embed.add_field(name="Type of command", value=command_type)
-        embed.add_field(
-            name="Defined on line",
-            value=f"`{command_defined_on}`",
-            inline=False,
-        )
-        embed.add_field(name="Signature", value=full_command_signature, inline=False)
-    await ctx.send(embed=embed)
-
-
-@load.error
-async def load_error(ctx: commands.Context, error: commands.CommandError) -> None:
-    if isinstance(error, commands.NotOwner):
-        embed: Embed = discord.Embed(
-            color=constants.Colours.soft_red,
-            description=f"{constants.Emojis.error} This Can Only Be Used By The Bot's Owners.",
-        )
-    elif isinstance(error, ExtensionAlreadyLoaded):
-        embed: Embed = discord.Embed(
-            color=constants.Colours.soft_red,
-            description=f"{constants.Emojis.error} This Extension Is Already Loaded.",
-        )
-        await ctx.send(embed=embed)
-    elif isinstance(error, ExtensionNotFound):
-        embed: Embed = discord.Embed(
-            color=constants.Colours.soft_red,
-            description=f"{constants.Emojis.error} This Extension Does Not Exist.",
-        )
-        await ctx.send(embed=embed)
-    else:
-        traceback.print_exception(type(error), error, error.__traceback__)
-
-
-@bot.command()
-@commands.is_owner()
-async def unload(ctx: commands.Context, *, extentions: str) -> None:
-    """Unloads an extension, owners only"""
-    if bot.development_mode != "development":
-        embed: Embed = discord.Embed(
-            color=constants.Colours.soft_red,
-            description=f"{constants.Emojis.error} `bot.development_mode` set to `{bot.development_mode}`, "
-            "commands such as `load`, `reload` and `unload` require `bot.development_mode` to be **development**",
-        )
-        await ctx.send(embed=embed)
-        return
-
-    if extentions is None:
-        embed: Embed = discord.Embed(
-            color=constants.Colours.soft_red,
-            description=f"{constants.Emojis.error} `extention` argument missing",
-        )
-        await ctx.send(embed=embed)
-        return
-
-    loaded_extentions = []
-
-    for extention in extentions.split():
-        bot.unload_extension(f"cogs.{extention}")
-        loaded_extentions.append(extention)
-
-    embed: Embed = discord.Embed(
-        color=constants.Colours.bright_green,
-        description=f"{', '.join(loaded_extentions)} Are Now UnLoaded!",
-    )
-
-    message: Message = await ctx.send(embed=embed)
-
-    await message.add_reaction(constants.Emojis.sucess)
-
-
-@unload.error
-async def unload_error(ctx: commands.Context, error: commands.CommandError) -> None:
-    if isinstance(error, commands.NotOwner):
-        embed: Embed = discord.Embed(
-            color=constants.Colours.soft_red,
-            description=f"{constants.Emojis.error} This Can Only Be Used By The Bot's Owners.",
-        )
-        await ctx.send(embed=embed)
-    elif isinstance(error, ExtensionNotLoaded):
-        embed: Embed = discord.Embed(
-            color=constants.Colours.soft_red,
-            description=f"{constants.Emojis.error} This Extension Is Not Loaded.",
-        )
-        await ctx.send(embed=embed)
-    elif isinstance(error, ExtensionNotFound):
-        embed: Embed = discord.Embed(
-            color=constants.Colours.soft_red,
-            description=f"{constants.Emojis.error} This Extension Does Not Exist.",
-        )
-        await ctx.send(embed=embed)
-    else:
-        traceback.print_exception(type(error), error, error.__traceback__)
-
-
-@bot.command()
-@commands.is_owner()
-async def reload(ctx: commands.Context, *, extension: str) -> None:
-    bot.unload_extension(f"cogs.{extension}")
-    bot.load_extension(f"cogs.{extension}")
-    embed: Embed = discord.Embed(
-        color=constants.Colours.bright_green,
-        description=f"{constants.Emojis.sucess} Successfully Reloaded {extension}",
-    )
-    await ctx.send(embed=embed)
-
-
-@reload.error
-async def reload_error(ctx: commands.Context, error: commands.CommandError) -> None:
-    if isinstance(error, commands.NotOwner):
-        embed: Embed = discord.Embed(
-            color=constants.Colours.soft_red,
-            description=f"{constants.Emojis.error} This Can Only Be Used By The Bot's Owners.",
-        )
-    elif isinstance(error, ExtensionNotLoaded):
-        embed: Embed = discord.Embed(
-            color=constants.Colours.soft_red,
-            description=f"{constants.Emojis.error} This Extension Is Not Loaded.",
-        )
-        await ctx.send(embed=embed)
-    elif isinstance(error, ExtensionNotFound):
-        embed: Embed = discord.Embed(
-            color=constants.Colours.soft_red,
-            description=f"{constants.Emojis.error} This Extension Does Not Exist.",
-        )
-        await ctx.send(embed=embed)
-    else:
-        traceback.print_exception(type(error), error, error.__traceback__)
