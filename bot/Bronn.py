@@ -15,7 +15,7 @@ from sentry_sdk import push_scope
 import aiohttp
 import discord
 from aiohttp import ClientSession
-from discord import Embed, Intents, Message
+from discord import Embed, Intents
 from discord.ext import commands, tasks
 from discord.flags import MemberCacheFlags
 from discord.mentions import AllowedMentions
@@ -41,21 +41,15 @@ class Bot(commands.Bot):
 
     def __init__(
         self,
-        development_mode: bool = True,
         extensions_dir: str = "exts",
         *args,
         **kwargs,
     ) -> None:
         self.extensions_dir: str = extensions_dir
-        development_mode_passed: bool = development_mode is not None
-
-        if not development_mode_passed:
-            raise ValueError("__init__ expects development_mode to be provided, got None")
         self.filter_list_cache: dict = defaultdict(dict)
         self.guilds_info_cache: dict = defaultdict(dict)
         self.session: ClientSession = aiohttp.ClientSession()
         self.bot_owners = constants.Bot.owners_ids
-        self.development_mode: bool = development_mode
         self.redis_path = constants.Redis.uri
         self.command_prefix = commands.when_mentioned_or(constants.Bot.prefix)
 
