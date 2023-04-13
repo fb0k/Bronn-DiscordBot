@@ -371,7 +371,7 @@ class Filterlist(BaseModel):
 
     @classmethod
     async def append_by_guild(cls, field: str, value: Any, guild_id: int):
-        obj = await cls.get(guild_id=guild_id)
+        obj = (await cls.get_or_create(guild_id=guild_id))[0]
         await cls.update_or_create({field: obj.ArrayAppend(F(field), value)}, guild_id=guild_id)
         await obj.refresh_from_db(fields=[field])
         return obj
