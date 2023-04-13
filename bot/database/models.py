@@ -174,49 +174,50 @@ class BaseModel(Model):
         def __init__(self, field: str, value: Any) -> None:
             super().__init__("ARRAY_PREPEND", value, field)
 
-    async def append(self, field: str, value: Any):
-        self.__dict__[field] = self.ArrayAppend(F(field), value)
-        await self.save(update_fields=[field])
-        await self.refresh_from_db(fields=[field])
-        return self.__getattribute__(field)
-    
-    @classmethod
-    async def append_by_guild(cls, field: str, value: Any, guild_id: int):
-        obj = await cls.get(guild_id=guild_id)
-        await cls.update_or_create({field: obj.ArrayAppend(F(field), value)}, guild_id=guild_id)
-        await obj.refresh_from_db(fields=[field])
-        return obj
-    
-    @classmethod
-    async def remove_by_guild(cls, field: str, value: Any, guild_id: int):
-        obj = (await cls.get_or_create(guild_id=guild_id))[0]
-        await cls.update_or_create({field: obj.ArrayRemove(F(field), value)}, guild_id=guild_id)
-        await obj.refresh_from_db(fields=[field])
-        return obj
+    # async def append(self, field: str, value: Any):
+    #     self.__dict__[field] = self.ArrayAppend(F(field), value)
+    #     await self.save(update_fields=[field])
+    #     await self.refresh_from_db(fields=[field])
+    #     return self.__getattribute__(field)
 
-    async def remove(self, field: str, value: Any):
-        self.__dict__[field] = self.ArrayRemove(F("whitelist"), value)
-        await self.save(update_fields=[field])
-        await self.refresh_from_db(fields=[field])
-        return self.__getattribute__(field)
+    # @classmethod
+    # async def append_by_guild(cls, field: str, value: Any, guild_id: int):
+    #     obj = await cls.get(guild_id=guild_id)
+    #     await cls.update_or_create({field: obj.ArrayAppend(F(field), value)}, guild_id=guild_id)
+    #     await obj.refresh_from_db(fields=[field])
+    #     return obj
 
-    async def replaceitem(self, field: str, value: Any, newvalue: Any):
-        self.__dict__[field] = self.ArrayReplace(F(field), value, newvalue)
-        await self.save(update_fields=[field])
-        await self.refresh_from_db(fields=[field])
-        return self.__getattribute__(field)
+    # @classmethod
+    # async def remove_by_guild(cls, field: str, value: Any, guild_id: int):
+    #     obj = (await cls.get_or_create(guild_id=guild_id))[0]
+    #     value = obj.ArrayRemove(F(field), value)
+    #     await cls.update_or_create({field: value}, guild_id=guild_id)
+    #     await obj.refresh_from_db(fields=[field])
+    #     return obj
 
-    async def concat(self, field: str, array: Any):
-        self.__dict__[field] = self.ArrayConcatenate(F(field), array)
-        await self.save(update_fields=[field])
-        await self.refresh_from_db(fields=[field])
-        return self.__getattribute__(field)
+    # async def remove(self, field: str, value: Any):
+    #     self.__dict__[field] = self.ArrayRemove(F("whitelist"), value)
+    #     await self.save(update_fields=[field])
+    #     await self.refresh_from_db(fields=[field])
+    #     return self.__getattribute__(field)
 
-    async def prepend(self, field: str, value: Any):
-        self.__dict__[field] = self.ArrayPrepend(F(field), value)
-        await self.save(update_fields=[field])
-        await self.refresh_from_db(fields=[field])
-        return self.__getattribute__(field)
+    # async def replaceitem(self, field: str, value: Any, newvalue: Any):
+    #     self.__dict__[field] = self.ArrayReplace(F(field), value, newvalue)
+    #     await self.save(update_fields=[field])
+    #     await self.refresh_from_db(fields=[field])
+    #     return self.__getattribute__(field)
+
+    # async def concat(self, field: str, array: Any):
+    #     self.__dict__[field] = self.ArrayConcatenate(F(field), array)
+    #     await self.save(update_fields=[field])
+    #     await self.refresh_from_db(fields=[field])
+    #     return self.__getattribute__(field)
+
+    # async def prepend(self, field: str, value: Any):
+    #     self.__dict__[field] = self.ArrayPrepend(F(field), value)
+    #     await self.save(update_fields=[field])
+    #     await self.refresh_from_db(fields=[field])
+    #     return self.__getattribute__(field)
 
     class Meta:
         abstract = True
@@ -304,15 +305,6 @@ class Invite(BaseModel):
     guild = fields.ForeignKeyField("B0F.Guild", related_name="Invites")
 
 
-# class OSU(Model):
-#     id = fields.BigIntField(pk=True)
-#     username = fields.TextField(default=None, unique=False)
-#     skin = fields.TextField(default="Default Skin", unique=False)
-#     passive = fields.BooleanField(default=True)
-#     discord_id = fields.BigIntField()
-#     guild = fields.ForeignKeyField("B0F.Guild", related_name="OSU")
-
-
 class AFKModel(BaseModel):
     id = fields.BigIntField(pk=True)
     afk_user_id = fields.BigIntField()
@@ -321,20 +313,6 @@ class AFKModel(BaseModel):
     nickname = fields.TextField(default=None, null=True)
     message = fields.TextField(default=None, null=True)
     guild = fields.ForeignKeyField("B0F.Guild", related_name="AFK")
-
-
-# class Snipe(Model):
-#     id = fields.BigIntField(pk=True)
-#     enabled = fields.BooleanField(default=True)
-#     guild = fields.ForeignKeyField("B0F.Guild", related_name="Snipe")
-
-
-# class Captcha(Model):
-#     id = fields.BigIntField(pk=True)
-#     enabled = fields.BooleanField(default=False)
-#     guild = fields.ForeignKeyField("B0F.Guild", related_name="Captcha")
-#     # Types: Audio, Text, Picture, Arithmetic
-#     type = fields.TextField(default="text")
 
 
 class Warns(BaseModel):
@@ -387,16 +365,26 @@ class Tags(BaseModel):
 
 
 class Filterlist(BaseModel):
-    guild = fields.ForeignKeyField("B0F.Guild", related_name="filterlist", pk=True)
+    id = fields.BigIntField(pk=True)
+    guild = fields.ForeignKeyField("B0F.Guild", related_name="filterlist", unique=True)
     whitelist = ArrayField(str, null=True)
+
+    @classmethod
+    async def append_by_guild(cls, field: str, value: Any, guild_id: int):
+        obj = await cls.get(guild_id=guild_id)
+        await cls.update_or_create({field: obj.ArrayAppend(F(field), value)}, guild_id=guild_id)
+        await obj.refresh_from_db(fields=[field])
+        return obj
+
+    @classmethod
+    async def remove_by_guild(cls, field: str, value: Any, guild_id: int):
+        obj = await cls.get(guild_id=guild_id)
+        await cls.update_or_create({field: obj.ArrayRemove(F(field), value)}, guild_id=guild_id)
+        await obj.refresh_from_db(fields=[field])
+        return obj
 
     def __str__(self):
         return self.whitelist
-
-
-class Filters_test(BaseModel):
-    whitelist = ArrayField(str, null=True)
-    guild_id = fields.BigIntField()
 
 
 class Keys(BaseModel):
@@ -406,21 +394,9 @@ class Keys(BaseModel):
     level = fields.TextField(default="0")
 
 
-class Sometests(BaseModel):
-    id = fields.IntField(pk=True)
-    type = fields.CharField(max_length=20)
-    allowed = fields.BooleanField(default=False)
-    guild_id = fields.BigIntField()
-
-    class Meta:
-        unique_together = ("guild_id", "type")
-
-
-class Filters_test2(BaseModel):
-    whitelist = ArrayField(str, null=True)
-    # guild = fields.OneToOneField(
-    #     "B0F.Guild", on_delete=fields.CASCADE, related_name="whitelist", pk=True)
-    guild = fields.ForeignKeyField("B0F.Guild", related_name="whitelist", pk=True)
-
-    def __str__(self):
-        return self.whitelist
+# class Captcha(Model):
+#     id = fields.BigIntField(pk=True)
+#     enabled = fields.BooleanField(default=False)
+#     guild = fields.ForeignKeyField("B0F.Guild", related_name="Captcha")
+#     # Types: Audio, Text, Picture, Arithmetic
+#     type = fields.TextField(default="text")
