@@ -153,8 +153,8 @@ class Bot(commands.Bot):
         """Cache all the data in the FilterList on the database."""
 
         for guild in await Filterlist.all().values_list():
-            guild_id = guild[1]
-            whitelist = guild[0]
+            guild_id = guild[2]
+            whitelist = guild[1]
             self.insert_item_into_filter_list_cache(guild_id, whitelist)
 
     def append_to_guilds_cache(self, guild_id: int, item: dict) -> None:
