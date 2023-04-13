@@ -4,9 +4,11 @@ from discord.ext.commands import Context
 from tortoise import fields
 from tortoise.expressions import F
 from tortoise.models import Model
-
-
-from tortoise.contrib.postgres.fields import ArrayField
+from pypika.terms import Function
+from enum import Enum
+from typing import Any, List, Type, Union
+from tortoise.exceptions import ConfigurationError
+from tortoise.fields.base import Field
 
 
 # aioredis.util._converters[bool] = lambda x: b"1" if x else b"0"
@@ -111,8 +113,117 @@ from tortoise.contrib.postgres.fields import ArrayField
 #     return predicate
 
 
+class ArrayField(Field):  # type: ignore
+    """
+    Array field.
+
+    This field can store array of integer or string or Enums of these.
+    Only postgres db supported.
+    """
+
+    indexable = False
+
+    def __init__(self, elem_type: Type, **kwargs: Any) -> None:
+        if not issubclass(elem_type, (int, str)):
+            raise ConfigurationError("ArrayField only supports integer or string or Enums of these!")
+        super().__init__(**kwargs)
+        self.elem_type = elem_type
+
+    def to_db_value(self, value: List[Union[int, str, Enum]], instance) -> List[Union[int, str]]:
+        if value and issubclass(self.elem_type, Enum):
+            return [v.value for v in value]
+        return value
+
+    def to_python_value(self, value: List[Union[int, str]]) -> List[Union[int, str, Enum]]:
+        if value and issubclass(self.elem_type, Enum):
+            return [self.elem_type(v) for v in value]
+        return value
+
+    @property
+    def SQL_TYPE(self) -> str:  # type: ignore
+        if issubclass(self.elem_type, int):
+            return "INTEGER ARRAY"
+        if issubclass(self.elem_type, str):
+            return "TEXT ARRAY"
+
+
+class BaseModel(Model):
+    @classmethod
+    async def update_by_guild(cls, field_name: str, value: Any, guild_id: int) -> bool:
+        """Updates a database field with the given value. Returns True if the value is not 0."""
+        await cls.update_or_create({field_name: value}, guild_id=guild_id)
+        return value != 0
+
+    class ArrayAppend(Function):
+        def __init__(self, field: str, value: Any) -> None:
+            super().__init__("ARRAY_APPEND", field, value)
+
+    class ArrayRemove(Function):
+        def __init__(self, field: str, value: Any) -> None:
+            super().__init__("ARRAY_REMOVE", field, value)
+
+    class ArrayReplace(Function):
+        def __init__(self, field: str, value: Any, newvalue: Any) -> None:
+            super().__init__("ARRAY_REPLACE", field, value, newvalue)
+
+    class ArrayConcatenate(Function):
+        def __init__(self, field: str, array: Any) -> None:
+            super().__init__("ARRAY_CAT", field, array)
+
+    class ArrayPrepend(Function):
+        def __init__(self, field: str, value: Any) -> None:
+            super().__init__("ARRAY_PREPEND", value, field)
+
+    async def append(self, field: str, value: Any):
+        self.__dict__[field] = self.ArrayAppend(F(field), value)
+        await self.save(update_fields=[field])
+        await self.refresh_from_db(fields=[field])
+        return self.__getattribute__(field)
+    
+    @classmethod
+    async def append_by_guild(cls, field: str, value: Any, guild_id: int):
+        obj = await cls.get(guild_id=guild_id)
+        await cls.update_or_create({field: obj.ArrayAppend(F(field), value)}, guild_id=guild_id)
+        await obj.refresh_from_db(fields=[field])
+        return obj
+    
+    @classmethod
+    async def remove_by_guild(cls, field: str, value: Any, guild_id: int):
+        obj = (await cls.get_or_create(guild_id=guild_id))[0]
+        await cls.update_or_create({field: obj.ArrayRemove(F(field), value)}, guild_id=guild_id)
+        await obj.refresh_from_db(fields=[field])
+        return obj
+
+    async def remove(self, field: str, value: Any):
+        self.__dict__[field] = self.ArrayRemove(F("whitelist"), value)
+        await self.save(update_fields=[field])
+        await self.refresh_from_db(fields=[field])
+        return self.__getattribute__(field)
+
+    async def replaceitem(self, field: str, value: Any, newvalue: Any):
+        self.__dict__[field] = self.ArrayReplace(F(field), value, newvalue)
+        await self.save(update_fields=[field])
+        await self.refresh_from_db(fields=[field])
+        return self.__getattribute__(field)
+
+    async def concat(self, field: str, array: Any):
+        self.__dict__[field] = self.ArrayConcatenate(F(field), array)
+        await self.save(update_fields=[field])
+        await self.refresh_from_db(fields=[field])
+        return self.__getattribute__(field)
+
+    async def prepend(self, field: str, value: Any):
+        self.__dict__[field] = self.ArrayPrepend(F(field), value)
+        await self.save(update_fields=[field])
+        await self.refresh_from_db(fields=[field])
+        return self.__getattribute__(field)
+
+    class Meta:
+        abstract = True
+
+
 # @cached_model(key="discord_id")
-class Guild(Model):
+class Guild(BaseModel):
     # Core Components Of The Model
     discord_id = fields.BigIntField(pk=True)
     language = fields.TextField(default="en")
@@ -163,7 +274,7 @@ class Guild(Model):
         return d
 
 
-class GuildEvent(Model):
+class GuildEvent(BaseModel):
     id = fields.BigIntField(pk=True)
     description = fields.TextField(default=None, unique=False)
     old = fields.TextField(default=None, unique=False)
@@ -172,7 +283,7 @@ class GuildEvent(Model):
     guild = fields.ForeignKeyField("B0F.Guild", related_name="GuildEvent")
 
 
-class Roles(Model):
+class Roles(BaseModel):
     id = fields.BigIntField(pk=True)
     name = fields.CharField(max_length=30)
     role_id = fields.BigIntField()
@@ -181,7 +292,7 @@ class Roles(Model):
     guild = fields.ForeignKeyField("B0F.Guild", related_name="Roles")
 
 
-class Invite(Model):
+class Invite(BaseModel):
     id = fields.BigIntField(pk=True)
     inviter_id = fields.BigIntField()
     invite_count_total = fields.IntField(default=0)
@@ -202,7 +313,7 @@ class Invite(Model):
 #     guild = fields.ForeignKeyField("B0F.Guild", related_name="OSU")
 
 
-class AFKModel(Model):
+class AFKModel(BaseModel):
     id = fields.BigIntField(pk=True)
     afk_user_id = fields.BigIntField()
     start_time = fields.DatetimeField(auto_now_add=True)
@@ -226,7 +337,7 @@ class AFKModel(Model):
 #     type = fields.TextField(default="text")
 
 
-class Warns(Model):
+class Warns(BaseModel):
     id = fields.BigIntField(pk=True)
     warn_id = fields.TextField()
     target_id = fields.BigIntField()
@@ -236,7 +347,7 @@ class Warns(Model):
     created_at = fields.DatetimeField(null=True, auto_now_add=True)
 
 
-class Users(Model):
+class Users(BaseModel):
     user_id = fields.BigIntField(pk=True)
     commands_run = fields.BigIntField(default=0, null=True)
     tracking_enabled = fields.BooleanField(default=True)
@@ -262,7 +373,7 @@ class Users(Model):
     #     return self.numwarns
 
 
-class Tags(Model):
+class Tags(BaseModel):
     tag_id = fields.IntField(pk=True)
     name = fields.TextField()
     created_at = fields.DatetimeField(null=True, auto_now_add=True)
@@ -275,58 +386,41 @@ class Tags(Model):
         return self.content
 
 
-class Filterlist(Model):
-    id = fields.IntField(pk=True)
-    type = fields.CharField(max_length=20)
-    allowed = fields.BooleanField(default=False)
-    comment = fields.TextField(default=None, null=True)
-    created_at = fields.DatetimeField(null=True, auto_now_add=True)
-    guild = fields.ForeignKeyField("B0F.Guild", related_name="FilterList")
+class Filterlist(BaseModel):
+    guild = fields.ForeignKeyField("B0F.Guild", related_name="filterlist", pk=True)
+    whitelist = ArrayField(str, null=True)
 
-    async def revertit(self, allow: bool):
-        self.allowed = allow
-        await self.save(update_fields=["allowed"])
-        await self.refresh_from_db(fields=["allowed"])
-        return self.allowed
-
-
-class Filters_test(Model):
-    guildid = fields.BigIntField(pk=True)
-    whitelist = fields.TextField(default=None, null=True)
-    blacklist = fields.TextField(default=None, null=True)
-    # guild = fields.ForeignKeyField("B0F.Guild", related_name="Filterstest")
-
-    async def allowit(self, file: str):
-        self.blacklist = self.blacklist.replace(file, "")
-        self.whitelist = (
-            f"{self.whitelist}{file}".replace("None", "")
-            if self.whitelist.find(f"{file}") is -1
-            else f"{self.whitelist}".replace("None", "")
-        )
-        await self.save(update_fields=["whitelist", "blacklist"])
-        await self.refresh_from_db(fields=["whitelist", "blacklist"])
+    def __str__(self):
         return self.whitelist
 
-    async def blockit(self, file: str):
-        self.whitelist = self.whitelist.replace(file, "")
-        self.blacklist = (
-            f"{self.blacklist}{file}".replace("None", "")
-            if self.blacklist.find(f"{file}") is -1
-            else f"{self.blacklist}".replace("None", "")
-        )
-        await self.save(update_fields=["whitelist", "blacklist"])
-        await self.refresh_from_db(fields=["whitelist", "blacklist"])
-        return self.blacklist
 
-    async def updatelist(self, file: str, field_name: ArrayField):
-        self.field_name += file
-        await self.save(update_fields=[f"{field_name}"])
-        await self.refresh_from_db(fields=[f"{field_name}"])
-        return self.field_name
+class Filters_test(BaseModel):
+    whitelist = ArrayField(str, null=True)
+    guild_id = fields.BigIntField()
 
 
-class Keys(Model):
+class Keys(BaseModel):
     key_id = fields.UUIDField(pk=True)
     enabled = fields.BooleanField(default=False)
     # 0 = Normal | 1 = Premium | 2 = Bot Owner
     level = fields.TextField(default="0")
+
+
+class Sometests(BaseModel):
+    id = fields.IntField(pk=True)
+    type = fields.CharField(max_length=20)
+    allowed = fields.BooleanField(default=False)
+    guild_id = fields.BigIntField()
+
+    class Meta:
+        unique_together = ("guild_id", "type")
+
+
+class Filters_test2(BaseModel):
+    whitelist = ArrayField(str, null=True)
+    # guild = fields.OneToOneField(
+    #     "B0F.Guild", on_delete=fields.CASCADE, related_name="whitelist", pk=True)
+    guild = fields.ForeignKeyField("B0F.Guild", related_name="whitelist", pk=True)
+
+    def __str__(self):
+        return self.whitelist
