@@ -138,31 +138,24 @@ class Bot(commands.Bot):
         self.status.start()
         log.info(f"Signed into Discord as {self.user} (ID: {self.user.id})\n")
         await self.cache_guilds_data()
+        await self.cache_filter_list_data()
 
     def _start(self) -> None:
         self.run(constants.Bot.token, reconnect=True)
 
-    def insert_item_into_filter_list_cache(self, item: dict) -> None:
+    def insert_item_into_filter_list_cache(self, guild_id: int, whitelist: list[str]) -> None:
         """Add an item to the bots filter_list_cache."""
-        file = item["type"]
-        allow = item["allowed"]
-        guild = item["guild_id"]
 
-        self.filter_list_cache[f"{guild}"][file] = {
-            "file": item["type"],
-            "guild_id": guild,
-            "allow": allow,
-            "comment": item["comment"],
-        }
+        self.filter_list_cache[f"{guild_id}"] = whitelist
+        log.info(self.filter_list_cache.items())
 
-    async def cache_filter_list_data(self, ctx: discord.ApplicationContext) -> None:
+    async def cache_filter_list_data(self) -> None:
         """Cache all the data in the FilterList on the database."""
-        result = await Filterlist.filter(guild_id=f"{ctx.guild.id}").values(
-            "id", "allowed", "comment", "created_at", "type", "guild_id"
-        )
 
-        for item in result:
-            self.insert_item_into_filter_list_cache(item)
+        for guild in await Filterlist.all().values_list():
+            guild_id = guild[1]
+            whitelist = guild[0]
+            self.insert_item_into_filter_list_cache(guild_id, whitelist)
 
     def append_to_guilds_cache(self, guild_id: int, item: dict) -> None:
         """Add an item to the bots guilds_cache."""
@@ -185,7 +178,7 @@ class Bot(commands.Bot):
             self.append_to_guilds_cache(id, item)
 
 
-bot: Bot = Bot(development_mode="development")
+bot: Bot = Bot()
 
 
 @bot.event
@@ -193,7 +186,8 @@ async def on_guild_join(guild: discord.Guild) -> None:
     try:
         await Guild.create(discord_id=guild.id, language="en", prefix=".")
         log.info(f"Joined Guild {guild.name} - ID: {guild.id}")
-    except IntegrityError:
+    except Exception:
+        await Guild.create(discord_id=guild.id, language="en", prefix=".")
         log.info(f"{guild.name} ({guild.id}) Has Reinvited {constants.Bot.name}.")
 
 
