@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Union, Any
 from tortoise.exceptions import OperationalError
 from database.models import Filterlist, Guild
 from tortoise.functions import Concat, Coalesce
@@ -44,10 +44,7 @@ class Filters(Cog):
         try:
             cached_item = self.bot.filter_list_cache[f"{ctx.guild.id}"]
             if file_type in cached_item:
-                pass
-            elif len(cached_item) == 0:  # if None, create it
-                item = await Filterlist.create(guild_id=guild, whitelist=[file_type])
-
+                item = False
             else:
                 item = await Filterlist.append_by_guild("whitelist", file_type, guild)
 
@@ -56,7 +53,8 @@ class Filters(Cog):
             log.error(f"{ctx.author} tried whitelist {file_type}, but tortoise returned a key error. ")
             # raise BadArgument(f"Unable to add the {file_type} to the whitelist. " "Check args and variables")
 
-        whitelist = item.whitelist
+        whitelist = item.whitelist if item else cached_item
+        log.info(whitelist)
         log.trace(f"Updating {guild} filterlist cache...")
         self.bot.insert_item_into_filter_list_cache(guild, whitelist)
         await ctx.message.add_reaction("✅")
@@ -90,6 +88,7 @@ class Filters(Cog):
             log.error(e)
 
         whitelist = item.whitelist
+        log.info(whitelist)
         log.trace(f"Updating {guild} filterlist cache...")
         self.bot.insert_item_into_filter_list_cache(guild_id=guild, whitelist=whitelist)
         await ctx.message.add_reaction("✅")
