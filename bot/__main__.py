@@ -7,7 +7,7 @@ setup_sentry()
 from Bronn import bot
 
 
-if __name__ == "__main__":
+def main() -> None:
     try:
         bot._start()
 
@@ -18,3 +18,7 @@ if __name__ == "__main__":
         log.fatal(message)
 
         exit(69)
+
+
+if __name__ == "__main__":
+    main()
