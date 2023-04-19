@@ -1,10 +1,10 @@
-from log import get_logger, setup_sentry, setup
+from bot.log import get_logger, setup_sentry, setup
 import sys
 
 setup()
 setup_sentry()
 
-from Bronn import bot
+from bot.Bronn import bot
 
 
 def main() -> None:

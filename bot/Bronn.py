@@ -21,12 +21,12 @@ from discord.flags import MemberCacheFlags
 from discord.mentions import AllowedMentions
 from tortoise import Tortoise
 from tortoise.exceptions import IntegrityError
-from database.models import Guild
+from bot.database.models import Guild
 from collections import defaultdict
-import constants
-from log import get_logger, return_error
-from database import tortoise_config
-from database.models import Filterlist
+from bot import constants
+from bot.log import get_logger, return_error
+from bot.database import tortoise_config
+from bot.database.models import Filterlist
 
 
 os.system("cls" if sys.platform == "win32" else "clear")
@@ -73,15 +73,13 @@ class Bot(commands.Bot):
 
         super().__init__(
             intents=intents,
-            command_prefix=self.command_prefix,
             case_insensitive=True,
             help_command=None,
             allowed_mentions=allowed_mentions,
             member_cache_flags=stuff_to_cache,
             chunk_guilds_at_startup=chunk_guilds_at_startup,
             max_messages=1000,
-            *args,
-            **kwargs,
+            command_prefix=self.command_prefix,
         )
 
         # -- Load Extensions
