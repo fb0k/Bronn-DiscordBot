@@ -50,7 +50,7 @@ class _Bot(EnvConfig):
 
     name = "B0F"
     discord_id = "bot_id"
-    prefix = "."
+    prefix = '.'
     sentry_dsn = "https://5a6c0fa78ab745b6b6166ff6ec413e22@o4504850831114240.ingest.sentry.io/4504850837536768"
     token = "bot_token"
     trace_loggers = "*"
