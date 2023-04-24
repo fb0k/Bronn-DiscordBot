@@ -6,6 +6,7 @@ from time import struct_time
 from typing import Literal, Optional, Union, overload
 import arrow
 from dateutil.relativedelta import relativedelta
+import discord
 
 
 _DURATION_REGEX = re.compile(

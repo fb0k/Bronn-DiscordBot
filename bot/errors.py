@@ -6,8 +6,8 @@ from discord import Embed, Member
 import difflib
 import discord
 from sentry_sdk import push_scope
-from Bronn import Bot
-from constants import Colours, Icons, MODERATION_ROLES, Emojis
+from bot.Bronn import Bot
+from bot.constants import Colours, Icons, MODERATION_ROLES, Emojis
 
 # from utils.custommetacog import CustomCog as Cog
 
