@@ -9,7 +9,7 @@ import sentry_sdk
 from sentry_sdk.integrations.logging import LoggingIntegration
 
 # from sentry_sdk.integrations.redis import RedisIntegration
-import constants
+from bot import constants
 
 TRACE_LEVEL = 5
 

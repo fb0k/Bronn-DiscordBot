@@ -6,8 +6,8 @@ from typing import Sequence
 import discord
 from discord.abc import User
 from discord.ext.commands import Context, Paginator
-import constants
-from log import get_logger
+from bot import constants
+from bot.log import get_logger
 
 
 FIRST_EMOJI = "\u23EE"  # [:track_previous:]
